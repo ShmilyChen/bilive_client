@@ -183,7 +183,7 @@ class Raffle extends EventEmitter {
         }
       }
     })
-    if (!this._user.userData['lotteryApi2']) {
+    if (this._user.userData['lotteryApi2']) {
       const reward2: requestOptions = {
         method: 'POST',
         uri: 'https://api.live.bilibili.com/xlive/lottery-interface/v2/Lottery/join',
