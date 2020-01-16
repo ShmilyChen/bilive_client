@@ -378,7 +378,7 @@ EXP：${user.medalData.intimacy}/${user.medalData.next_intimacy} \
   private _pushMSGHandler(rawMsg: any) {
     let pushMsg: string = ''
     pushMsg += `# bilive_client 挂机情况报告\n`
-    pushMsg += `- 本次挂机开始于 ${new Date(this.listenStatus.startTime).toString()}\n`
+    pushMsg += `- 本次挂机开始于 ${tools.format("yyyy-mm-dd HH:MM:SS",new Date(this.listenStatus.startTime))}\n`
     pushMsg += `- 共监听到活动抽奖数：${this.listenStatus.raffle}(${this.todayListenStatus.raffle})\n`
     pushMsg += `- 共监听到大航海抽奖数：${this.listenStatus.lottery}(${this.todayListenStatus.lottery})\n`
     pushMsg += `- 共监听到节奏风暴抽奖数：${this.listenStatus.beatStorm}(${this.todayListenStatus.beatStorm})\n`

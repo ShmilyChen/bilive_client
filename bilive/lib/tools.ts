@@ -145,6 +145,28 @@ class Tools extends EventEmitter {
   public Date(): string {
     return new Date().toString().slice(4, 24)
   }
+
+  public format = (fmt: string, date: Date = new Date()) => {
+    let o: any = {
+      "Y+": date.getFullYear().toString(),        // 年
+      "y+": date.getFullYear().toString(),        // 年
+      "m+": (date.getMonth() + 1).toString(),     // 月
+      "d+": date.getDate().toString(),            // 日
+      "H+": date.getHours().toString(),           // 时
+      "M+": date.getMinutes().toString(),         // 分
+      "S+": date.getSeconds().toString()          // 秒
+    }
+
+    if (/(y+)/.test(fmt)) {
+      fmt = fmt.replace(RegExp.$1, (date.getFullYear() + "").substr(4 - RegExp.$1.length))
+    }
+    for (let k in o) {
+      if (new RegExp("(" + k + ")").test(fmt)) {
+        fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)))
+      }
+    }
+    return fmt
+  }
   /**
    * 格式化输出, 配合PM2凑合用
    *
@@ -152,7 +174,7 @@ class Tools extends EventEmitter {
    * @memberof tools
    */
   public Log(...message: any[]) {
-    const log = util.format(`${this.Date()} :`, ...message)
+    const log = util.format(`${this.format("yyyy-mm-dd HH:MM:SS")} :`, ...message)
     if (this.logs.length > 500) this.logs.shift()
     this.emit('log', log)
     this.logs.push(log)

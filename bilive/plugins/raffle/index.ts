@@ -91,6 +91,13 @@ class Raffle extends Plugin {
       type: 'boolean'
     }
     whiteList.add('lottery')
+    defaultOptions.newUserData['lotteryApi2'] = false
+    defaultOptions.info['lotteryApi2'] = {
+      description: '舰队抽奖Api2',
+      tip: '自动参与lottery类抽奖Api2',
+      type: 'boolean'
+    }
+    whiteList.add('lotteryApi2')
     // pklottery类抽奖
     defaultOptions.newUserData['pklottery'] = false
     defaultOptions.info['pklottery'] = {
