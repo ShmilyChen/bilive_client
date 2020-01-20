@@ -11,21 +11,14 @@ class AutoUpdate extends Plugin {
   public description = '自动更新本地git，配合pm2可实现自动更新'
   public version = '0.0.3'
   public author = 'Vector000'
-  public async load({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
-    defaultOptions.advConfig['checkUpdate'] = false
-    defaultOptions.info['checkUpdate'] = {
-      description: '自动更新',
-      tip: '自动更新bilive_client',
-      type: 'boolean'
-    }
-    whiteList.add('checkUpdate')
+  public async load() {
     this.loaded = true
   }
-  public async start( options: options, newUser: boolean) {
-    if (!newUser) this._checkForUpdate(options)
+  public async start({}, newUser: boolean) {
+    if (!newUser) this._checkForUpdate()
   }
-  public async loop({ cstMin, cstHour,options }: { cstMin: number, cstHour: number , options: options}) {
-    if (cstMin === 0 && cstHour % 12 === 6) this._checkForUpdate(options)
+  public async loop({ cstMin, cstHour }: { cstMin: number, cstHour: number }) {
+    if (cstMin === 0 && cstHour % 12 === 6) this._checkForUpdate()
   }
   // 根目录路径
   private _dirname = __dirname + '/../../..'
@@ -76,8 +69,7 @@ class AutoUpdate extends Plugin {
    * @private
    * 
    */
-  private async _checkForUpdate( options: options) {
-    if (!<boolean>options.advConfig['checkUpdate']) return
+  private async _checkForUpdate() {
     const pathStatus = await this._checkPath(this._dirname)
     if (!pathStatus) return tools.Log(`未发现git仓库，无法进行自动更新`)
     else {
