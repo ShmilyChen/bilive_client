@@ -16,7 +16,7 @@ class Raffle extends EventEmitter {
    * @param {options} options
    * @memberof Raffle
    */
-  constructor(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage , user: User, options: options) {
+  constructor(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage, user: User, options: options) {
     super()
     this._raffleMessage = raffleMessage
     this._user = user
@@ -60,21 +60,18 @@ class Raffle extends EventEmitter {
    * @memberof Raffle
    */
   public async Start() {
+    this._url = <string>this._options.advConfig[`${this._raffleMessage.cmd}API`]
     switch (this._raffleMessage.cmd) {
       case 'raffle':
-        this._url = 'https://api.live.bilibili.com/gift/v4/smalltv'
         this._Raffle()
         break
       case 'lottery':
-        this._url = 'https://api.live.bilibili.com/lottery/v2/lottery'
         this._Lottery()
         break
       case 'pklottery':
-        this._url = 'https://api.live.bilibili.com/xlive/lottery-interface/v1/pk'
         this._PKLottery()
         break
       case 'beatStorm':
-        this._url = 'https://api.live.bilibili.com/lottery/v1/Storm'
         this._BeatStorm()
         break
       default: break
@@ -133,7 +130,7 @@ class Raffle extends EventEmitter {
           }
         }
         else tools.Log(this._user.nickname, title, id, raffleAward.body)
-        if (raffleAward.body.msg === '访问被拒绝') 
+        if (raffleAward.body.msg === '访问被拒绝')
           this.emit('msg', { cmd: 'ban', data: { uid: this._user.uid, type: 'raffle', nickname: this._user.nickname } })
         else if (raffleAward.body.code === 500 && raffleAward.body.msg === '系统繁忙') {
           await tools.Sleep(500)
@@ -183,41 +180,6 @@ class Raffle extends EventEmitter {
         }
       }
     })
-    if (this._user.userData['lotteryApi2']) {
-      const reward2: requestOptions = {
-        method: 'POST',
-        uri: 'https://api.live.bilibili.com/xlive/lottery-interface/v2/Lottery/join',
-        body: AppClient.signQueryBase(`${this._user.tokenQuery}&id=${id}&roomid=${roomID}&type=${type}`),
-        json: true,
-        headers: this._user.headers
-      }
-      tools.XHR<lotteryReward>(reward2, 'Android').then(async lotteryReward2 => {
-        if (lotteryReward2 !== undefined && lotteryReward2.response.statusCode === 200) {
-          if (lotteryReward2.body.code === 0) {
-            let data = lotteryReward2.body.data
-            let type = data.privilege_type
-            this.emit('msg', {
-              cmd: 'earn',
-              data: {
-                uid: this._user.uid,
-                nickname: this._user.nickname,
-                type: 'lottery',
-                name: data.message.includes('辣条X') ? '辣条' : '亲密度',
-                num: (type === 1 ? 20 : (type === 2 ? 5 : 1))
-              }
-            })
-            tools.Log(this._user.nickname, title+"Api2", id, data.message)
-          }
-          else tools.Log(this._user.nickname, title, id, lotteryReward2.body)
-          if (lotteryReward2.body.msg === '访问被拒绝')
-            this.emit('msg', { cmd: 'ban', data: { uid: this._user.uid, type: 'raffle', nickname: this._user.nickname } })
-          else if (lotteryReward2.body.code === 500 && lotteryReward2.body.msg === '系统繁忙') {
-            await tools.Sleep(500)
-            this._Lottery()
-          }
-        }
-      })
-    }
   }
   /**
    * PKLottery类抽奖

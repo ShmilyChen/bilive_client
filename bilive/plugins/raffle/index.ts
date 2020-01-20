@@ -51,7 +51,7 @@ class Raffle extends Plugin {
       type: 'number'
     }
     whiteList.add('raffleDelay')
-     // beatStorm类抽奖的全局延迟
+    // beatStorm类抽奖的全局延迟
     defaultOptions.advConfig['beatStormDelay'] = 20
     defaultOptions.info['beatStormDelay'] = {
       description: 'beatStorm延迟',
@@ -91,13 +91,6 @@ class Raffle extends Plugin {
       type: 'boolean'
     }
     whiteList.add('lottery')
-    defaultOptions.newUserData['lotteryApi2'] = false
-    defaultOptions.info['lotteryApi2'] = {
-      description: '舰队抽奖Api2',
-      tip: '自动参与lottery类抽奖Api2',
-      type: 'boolean'
-    }
-    whiteList.add('lotteryApi2')
     // pklottery类抽奖
     defaultOptions.newUserData['pklottery'] = false
     defaultOptions.info['pklottery'] = {
@@ -136,6 +129,37 @@ class Raffle extends Plugin {
     // beatStorm刷新时间
     defaultOptions.advConfig['beatStormRefresh'] = Date.now()
     whiteList.add('beatStormRefresh')
+    /**
+     * 抽奖api
+     */
+    defaultOptions.advConfig['raffleAPI'] = 'https://api.live.bilibili.com/gift/v4/smalltv'
+    defaultOptions.info['raffleAPI'] = {
+      description: 'raffleAPI',
+      tip: 'raffle类抽奖API',
+      type: 'string'
+    }
+    whiteList.add('raffleAPI')
+    defaultOptions.advConfig['lotteryAPI'] = 'https://api.live.bilibili.com/xlive/lottery-interface/v2/Lottery'
+    defaultOptions.info['lotteryAPI'] = {
+      description: 'lotteryAPI',
+      tip: 'lottery类抽奖API',
+      type: 'string'
+    }
+    whiteList.add('lotteryAPI')
+    defaultOptions.advConfig['pklotteryAPI'] = 'https://api.live.bilibili.com/xlive/lottery-interface/v1/pk'
+    defaultOptions.info['pklotteryAPI'] = {
+      description: 'pklotteryAPI',
+      tip: 'pklottery类抽奖API',
+      type: 'string'
+    }
+    whiteList.add('pklotteryAPI')
+    defaultOptions.advConfig['beatStormAPI'] = 'https://api.live.bilibili.com/lottery/v1/Storm'
+    defaultOptions.info['beatStormAPI'] = {
+      description: 'beatStormAPI',
+      tip: 'beatStorm类抽奖API',
+      type: 'string'
+    }
+    whiteList.add('beatStormAPI')
     this.loaded = true
   }
   /**
@@ -178,7 +202,7 @@ class Raffle extends Plugin {
       if (this._stormEarn[uid] !== undefined && this._stormEarn[uid] >= <number>user.userData['beatStormLimit']) return
       userPriority.push(<number>user.userData['beatStormPriority'])
     })
-    let priorityAsc = userPriority.sort(function(a, b){return a - b})
+    let priorityAsc = userPriority.sort(function (a, b) { return a - b })
     let order = priorityAsc.length - <number>options.advConfig['stormUserLimit']
     if (order < 0) order = 0
     let priority = priorityAsc[order]
@@ -209,7 +233,7 @@ class Raffle extends Plugin {
     Options.save()
   }
   public async msg({ message, options, users }: { message: raffleMessage | lotteryMessage | beatStormMessage, options: options, users: Map<string, User> }) {
-    if (this._raffle) await this._preRaffle({message, options, users})
+    if (this._raffle) await this._preRaffle({ message, options, users })
   }
   // 抽奖缓存，应对大量抽奖
   private raffleSet: Set<number> = new Set()
@@ -220,18 +244,18 @@ class Raffle extends Plugin {
    */
   private async _preRaffle({ message, options, users }: { message: raffleMessage | lotteryMessage | beatStormMessage, options: options, users: Map<string, User> }) {
     const raffleID = message.id
-    if (message.cmd === 'beatStorm') this._doStorm({message, options, users})
+    if (message.cmd === 'beatStorm') this._doStorm({ message, options, users })
     else {
       if (Date.now() - this.raffleTime < 400) {
         this.raffleTime = Date.now()
         this.raffleSet.add(raffleID)
         await tools.Sleep(400 * this.raffleSet.size)
-        this._doRaffle({message, options, users})
+        this._doRaffle({ message, options, users })
       }
       else {
         this.raffleTime = Date.now()
         this.raffleSet.clear()
-        this._doRaffle({message, options, users})
+        this._doRaffle({ message, options, users })
       }
     }
   }
