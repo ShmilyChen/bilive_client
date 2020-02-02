@@ -251,7 +251,7 @@ class Raffle extends EventEmitter {
           break
         }
       }
-      else tools.Log(this._user.nickname, title, id, `第${i}次尝试`, joinStorm.body.msg)
+      // else tools.Log(this._user.nickname, title, id, `第${i}次尝试`, joinStorm.body.msg)
       if (joinStorm.body.msg === '访问被拒绝') {
         this.emit('msg', { cmd: 'ban', data: { uid: this._user.uid, type: 'beatStorm', nickname: this._user.nickname } })
         break
