@@ -149,7 +149,7 @@ class Raffle extends EventEmitter {
     const { id, roomID, title, type } = <lotteryMessage>this._raffleMessage
     const reward: requestOptions = {
       method: 'POST',
-      uri: `${this._url}/join`,
+      uri: 'https://api.live.bilibili.com/xlive/lottery-interface/v2/Lottery/join',
       body: AppClient.signQueryBase(`${this._user.tokenQuery}&id=${id}&roomid=${roomID}&type=${type}`),
       json: true,
       headers: this._user.headers
