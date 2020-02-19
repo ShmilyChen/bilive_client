@@ -21,13 +21,13 @@ class AutoActTask extends Plugin {
     this.loaded = true
   }
   public async start({ users }: { users: Map<string, User> }) {
-    this._getEventInfo()
+    await this._getEventInfo()
     this._doActTask(users)
   }
   public async loop({ cstMin, cstHour, users }: { cstMin: number, cstHour: number, users: Map<string, User> }) {
     // 每天04:30, 12:30, 20:30做任务
     if (cstMin === 30 && cstHour % 8 === 4) {
-      this._getEventInfo()
+      await this._getEventInfo()
       this._doActTask(users)
     }
   }
@@ -84,12 +84,12 @@ class AutoActTask extends Plugin {
       })
     })
   }
-  private _getEventInfo() {
+  private async _getEventInfo() {
     const url: requestOptions = {
       uri: `https://raw.githubusercontent.com/Vector000/bilive_client/master/EventInfo.json`,
       json: true
     }
-    tools.XHR<EventInfo>(url).then(eventInfoCallback => {
+    await tools.XHR<EventInfo>(url).then(eventInfoCallback => {
       if (eventInfoCallback !== undefined && eventInfoCallback.response.statusCode === 200)
         this._eventInfo = eventInfoCallback.body
     })
