@@ -8,6 +8,7 @@ class AutoActTask extends Plugin {
   public description = '每天自动进行活动任务（不定期任务）'
   public version = '0.0.1'
   public author = 'Vector000'
+  private _eventInfo!: EventInfo
   public async load({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
     // 自动签到
     defaultOptions.newUserData['doActTask'] = false
@@ -20,81 +21,96 @@ class AutoActTask extends Plugin {
     this.loaded = true
   }
   public async start({ users }: { users: Map<string, User> }) {
-    this._doAPIs(users)
+    this._getEventInfo()
+    this._doActTask(users)
   }
   public async loop({ cstMin, cstHour, users }: { cstMin: number, cstHour: number, users: Map<string, User> }) {
     // 每天04:30, 12:30, 20:30做任务
     if (cstMin === 30 && cstHour % 8 === 4) {
-      this._doAPIs(users)
+      this._getEventInfo()
+      this._doActTask(users)
+    }
+  }
+  private _doActTask(users: Map<string, User>) {
+    const eventInfo = this._eventInfo
+    for (const key in eventInfo) {
+      switch (key) {
+        case "lpl_task":
+          this._doLPLAct(users, eventInfo[key])
+          break
+        default: break
+      }
     }
   }
   /**
-   * 任务列表
-   * 
-   * @private
-   * @memberof AutoActTask 
-   */
-  private tasks: task[] = [
-    {
-      "name": "LPL签到",
-      "url": "https://api.live.bilibili.com/xlive/general-interface/v1/lpl-task/MatchSign",
-      "bodyStr": "room_id=7734200&game_type=25",
-      "endTime": 1585843200000
-    },
-    {
-      "name": "LPL分享",
-      "url": "https://api.live.bilibili.com/xlive/general-interface/v1/lpl-task/MatchShare",
-      "bodyStr": "game_type=25",
-      "endTime": 1585843200000
-    },
-    {
-      "name": "守望先锋签到",
-      "url": "https://api.live.bilibili.com/xlive/general-interface/v1/lpl-task/MatchSign",
-      "bodyStr": "room_id=7734200&game_type=26",
-      "endTime": 1584720000000
-    },
-    {
-      "name": "守望先锋分享",
-      "url": "https://api.live.bilibili.com/xlive/general-interface/v1/lpl-task/MatchShare",
-      "bodyStr": "game_type=26",
-      "endTime": 1584720000000
-    }
-  ]
-  /**
-   * 自动任务
+   * 自动lpl类型任务任务
    *
    * @private
    * @memberof AutoActTask
    */
-  private _doAPIs(users: Map<string, User>) {
-    users.forEach(user => {
-      if (!user.userData['doActTask']) return
-      this.tasks.forEach(async task => {
-        if (Date.now() > task.endTime) return
-        const taskAPI: requestOptions = {
+  private _doLPLAct(users: Map<string, User>, lplParams: lplParams[]) {
+    lplParams.forEach(param => {
+      const { name, endTime, game_type, room_id } = param
+      if (new Date > new Date(endTime)) return
+      users.forEach(async (user) => {
+        if (!user.userData['doActTask']) return
+        // 用户签到
+        const actLPLSgin = `${name}签到`
+        const actAPI1: requestOptions = {
           method: 'POST',
-          uri: task.url,
-          body: `${task.bodyStr}&csrf_token=${tools.getCookie(user.jar, 'bili_jct')}&csrf=${tools.getCookie(user.jar, 'bili_jct')}`,
+          uri: `https://api.live.bilibili.com/xlive/general-interface/v1/lpl-task/MatchSign`,
+          body: `room_id=${room_id}&game_type=${game_type}&csrf_token=${tools.getCookie(user.jar, 'bili_jct')}&csrf=${tools.getCookie(user.jar, 'bili_jct')}`,
           jar: user.jar,
           json: true
         }
-        const taskResult = await tools.XHR<taskXHR>(taskAPI)
-        if (taskResult !== undefined && taskResult.response.statusCode === 200) tools.Log(user.nickname, '活动任务', task.name, '已完成')
+        tools.XHR<taskXHR>(actAPI1).then(actAPI1Callback => {
+          if (actAPI1Callback !== undefined && actAPI1Callback.response.statusCode === 200)
+            tools.Log(user.nickname, '活动任务', actLPLSgin, '已完成')
+        })
+        // 用户分享
+        const actLPLShare = `${name}分享`
+        const actAPI2: requestOptions = {
+          method: 'POST',
+          uri: `https://api.live.bilibili.com/xlive/general-interface/v1/lpl-task/MatchShare`,
+          body: `game_type=${game_type}&csrf_token=${tools.getCookie(user.jar, 'bili_jct')}&csrf=${tools.getCookie(user.jar, 'bili_jct')}`,
+          jar: user.jar,
+          json: true
+        }
+        tools.XHR<taskXHR>(actAPI2).then(actAPI2Callback => {
+          if (actAPI2Callback !== undefined && actAPI2Callback.response.statusCode === 200) {
+            tools.Log(user.nickname, '活动任务', actLPLShare, '已完成')
+          }
+        })
       })
+    })
+  }
+  private _getEventInfo() {
+    const url: requestOptions = {
+      uri: `https://raw.githubusercontent.com/Vector000/bilive_client/master/EventInfo.json`,
+      json: true
+    }
+    tools.XHR<EventInfo>(url).then(eventInfoCallback => {
+      if (eventInfoCallback !== undefined && eventInfoCallback.response.statusCode === 200)
+        this._eventInfo = eventInfoCallback.body
     })
   }
 }
 
-interface task {
-  name: string
-  url: string
-  bodyStr: string
-  endTime: number
-}
 interface taskXHR {
   code: number
   msg: string
   ttl: number
+}
+
+interface EventInfo {
+  lpl_task: lplParams[]
+}
+
+interface lplParams {
+  name: string
+  room_id: string
+  game_type: string
+  endTime: string
 }
 
 export default new AutoActTask()
