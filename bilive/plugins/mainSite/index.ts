@@ -275,7 +275,6 @@ class MainSite extends Plugin {
     else tools.Log(user.nickname, `漫画签到失败`)
     if (shareComic !== undefined && shareComic.body.code === 0) tools.Log(user.nickname, `已完成漫画签到，经验+${shareComic.body.data.point}`)
     else tools.Log(user.nickname, `漫画分享失败`)
-    tools.Log(signComic?.body,shareComic?.body)
   }
 }
 /**
