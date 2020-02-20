@@ -119,7 +119,7 @@ class MainSite extends Plugin {
         }
       }
       const mainReward = await tools.XHR<mainReward>(reward)
-      if (this._getComicInfo(user)) await this._mainComic(user)
+      if (await this._getComicInfo(user)) await this._mainComic(user)
       if (mainReward === undefined) return
       let mids = await this._getAttentionList(user)
       if (mids === undefined) return tools.Log(user.nickname, `获取关注列表失败`)
