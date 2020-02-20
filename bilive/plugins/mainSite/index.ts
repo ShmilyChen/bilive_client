@@ -6,7 +6,7 @@ class MainSite extends Plugin {
     super()
   }
   public name = '主站功能'
-  public description = '每天自动做主站功能（观看、分享、投币）'
+  public description = '每天自动做主站功能（观看、分享、投币、漫画（签到，分享））'
   public version = '0.0.5'
   public author = 'Vector000'
   public async load({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
@@ -16,7 +16,7 @@ class MainSite extends Plugin {
     defaultOptions.newUserData['mainCoinGroup'] = []
     defaultOptions.info['main'] = {
       description: '主站功能',
-      tip: '每天自动完成主站功能（观看、分享、投币[可选]）',
+      tip: '每天自动完成主站功能（观看、分享、漫画（签到，分享）、投币[可选]）',
       type: 'boolean'
     }
     defaultOptions.info['mainCoin'] = {
@@ -109,14 +109,6 @@ class MainSite extends Plugin {
   private _bilibili(users: Map<string, User>) {
     users.forEach(async (user) => {
       if (!user.userData['main']) return
-      let mids = await this._getAttentionList(user)
-      if (mids === undefined) return tools.Log(user.nickname, `获取关注列表失败`)
-      if (mids.length === 0) return tools.Log(user.nickname, `关注列表空空的哦，去关注几个up主吧~`)
-      let aids = await this._getVideoList(mids)
-      if (aids.length === 0) return tools.Log(user.nickname, `视频列表空空的哦，去关注几个up主吧~`)
-      let aid: number = aids[Math.floor(Math.random() * (aids.length))]
-      let cid: number = <number>(await this._getCid(aid))
-      if (cid === undefined) return tools.Log(user.nickname, `获取cid失败`)
       const reward: requestOptions = {
         uri: `https://account.bilibili.com/home/reward`,
         jar: user.jar,
@@ -127,7 +119,16 @@ class MainSite extends Plugin {
         }
       }
       const mainReward = await tools.XHR<mainReward>(reward)
+      if (this._getComicInfo(user)) await this._mainComic(user)
       if (mainReward === undefined) return
+      let mids = await this._getAttentionList(user)
+      if (mids === undefined) return tools.Log(user.nickname, `获取关注列表失败`)
+      if (mids.length === 0) return tools.Log(user.nickname, `关注列表空空的哦，去关注几个up主吧~`)
+      let aids = await this._getVideoList(mids)
+      if (aids.length === 0) return tools.Log(user.nickname, `视频列表空空的哦，去关注几个up主吧~`)
+      let aid: number = aids[Math.floor(Math.random() * (aids.length))]
+      let cid: number = <number>(await this._getCid(aid))
+      if (cid === undefined) return tools.Log(user.nickname, `获取cid失败`)
       if (mainReward.body.data.watch_av) tools.Log(user.nickname, `今天已经看过视频啦~`)
       else await this._mainSiteWatch(user, aid, cid)
       if (mainReward.body.data.share_av) tools.Log(user.nickname, `今天已经分享过视频啦~`)
@@ -200,7 +201,7 @@ class MainSite extends Plugin {
     let coins = mainUserInfo.body.data.coins
     if (coins === 0) return tools.Log(user.nickname, `已经没有硬币啦~`)
     while (coins > 0 && coins_av < 50 && aids.length > 0) {
-      let i = Math.floor(Math.random()*(aids.length))
+      let i = Math.floor(Math.random() * (aids.length))
       let aid = aids[i]
       const addCoin: requestOptions = {
         method: 'POST',
@@ -220,10 +221,61 @@ class MainSite extends Plugin {
         coins--
         coins_av = coins_av + 10
       }
-      aids.splice(i,1)
+      aids.splice(i, 1)
       await tools.Sleep(3 * 1000)
     }
     tools.Log(user.nickname, `已完成主站投币，经验+${coins_av}`)
+  }
+  /**
+   * 获取漫画签到信息
+   *
+   * @private
+   * @param user 
+   * @memberof _getComicInfo
+   */
+  private async _getComicInfo(user: User) {
+    let ts = Date.now()
+    const sign: requestOptions = {
+      method: 'POST',
+      uri: `https://manga.bilibili.com/twirp/activity.v1.Activity/GetClockInInfo`,
+      body: AppClient.signQuery(`access_key=${user.accessToken}&platform=android&ts=${ts}`),
+      jar: user.jar,
+      json: true
+    }
+    const comicInfo = await tools.XHR<comicUserInfo>(sign, 'Android')
+    if (comicInfo !== undefined && comicInfo.body.code === 0 && comicInfo.body.data.status === 0) return true
+    return false
+  }
+  /**
+   * 漫画签到分享
+   * 
+   * @private
+   * @param user 
+   * @memberof _mainComic
+   */
+  private async _mainComic(user: User) {
+    let ts = Date.now()
+    const sign: requestOptions = {
+      method: 'POST',
+      uri: `https://manga.bilibili.com/twirp/activity.v1.Activity/ClockIn`,
+      body: AppClient.signQuery(`access_key=${user.accessToken}&platform=android&ts=${ts}`),
+      jar: user.jar,
+      json: true
+    }
+    const signComic = await tools.XHR<comicSgin>(sign, 'Android')
+    const share: requestOptions = {
+      method: 'POST',
+      uri: `https://manga.bilibili.com/twirp/activity.v1.Activity/ShareComic`,
+      body: AppClient.signQuery(`access_key=${user.accessToken}&platform=android&ts=${ts}`),
+      jar: user.jar,
+      json: true
+    }
+    const shareComic = await tools.XHR<comicShare>(share, 'Android')
+    if (signComic !== undefined && signComic.body.code === 0) tools.Log(user.nickname, `已完成漫画签到`)
+    else tools.Log(user.nickname, `漫画签到失败`)
+    if (shareComic !== undefined && shareComic.body.code === 0) tools.Log(user.nickname, `已完成漫画签到，经验+${shareComic.body.data.point}`)
+    else tools.Log(user.nickname, `漫画分享失败`)
+    tools.Log(signComic?.body,shareComic?.body)
   }
 }
 /**
@@ -337,4 +389,37 @@ interface mainRewardData {
 interface coinAdd {
   code: number
 }
+/**
+ * 漫画信息
+ *
+ * @interface comicUserInfo
+ */
+interface comicUserInfo {
+  code: number
+  data: comicUserInfoData
+}
+interface comicUserInfoData {
+  status: number
+}
+/**
+ * 漫画签到
+ * 
+ * @interface 
+ */
+interface comicSgin {
+  code: number
+}
+/**
+ * 漫画分享
+ * 
+ * @interface comicShare
+ */
+interface comicShare {
+  code: number
+  data: comicShareData
+}
+interface comicShareData {
+  point: number
+}
+
 export default new MainSite()

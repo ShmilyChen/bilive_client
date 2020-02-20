@@ -86,7 +86,7 @@ class AutoActTask extends Plugin {
   }
   private async _getEventInfo() {
     const url: requestOptions = {
-      uri: `https://raw.githubusercontent.com/Vector000/bilive_client/master/EventInfo.json`,
+      uri: `https://raw.githubusercontent.com/ShmilyChen/bilive_client/master/EventInfo.json`,
       json: true
     }
     await tools.XHR<EventInfo>(url).then(eventInfoCallback => {
