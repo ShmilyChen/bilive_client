@@ -83,7 +83,7 @@ class UserCheck extends Plugin {
     else {
       const userStr = <string>data['users'].value
       let arr = userStr.match(/(?<=\().*(?=\))/g)
-      if (arr !== null) uid = Number(arr[arr.length-1])
+      if (arr !== null) uid = Number(arr[arr.length - 1])
     }
     let out: string = `UID ${uid} 用户信息：\n`
     out += await this.getUserMainInfo(uid)
@@ -149,7 +149,7 @@ class UserCheck extends Plugin {
       let i: number = 0
       for (const key in medals) {
         let medal = medals[key]
-        if (medal.status === 1) 
+        if (medal.status === 1)
           wearedMSG += `佩戴勋章：【${medal.medal_name} | ${medal.level}】 (${medal.intimacy}/${medal.next_intimacy})\n`
         else {
           otherMSG += `【${medal.medal_name} | ${medal.level}】 (${medal.intimacy}/${medal.next_intimacy})`
