@@ -47,3 +47,4 @@ package-lock.json
 temp
 docs/view/options.js
 docs/view/script.js
+*.http

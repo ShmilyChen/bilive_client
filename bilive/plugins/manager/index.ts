@@ -87,11 +87,11 @@ class Manager extends Plugin {
     public async loop({ cstMin, cstHour, users }: { cstMin: number, cstHour: number, users: Map<string, User> }) {
         if (cstMin === 0 && cstHour === 10) {
             const user = users.get(<string>Options._.advConfig['managerKEY'])
-            if (user !== undefined) {
+            if (user !== undefined && <boolean>Options._.advConfig['managerSendStatus']) {
                 this._user = user
+                this.checkTime(users)
             }
-            this.checkTime(users)
-        } else if (cstMin == 0 && cstHour === 9 && this._user === undefined && Options._.advConfig['managerSendStatus']) {
+        } else if (cstMin == 0 && cstHour === 9 && this._user === undefined && <boolean>Options._.advConfig['managerSendStatus']) {
             tools.emit('SCMSG', <systemMSG>{
                 message: '私信通知发送者设置已失效',
                 options: Options._
@@ -144,7 +144,7 @@ class Manager extends Plugin {
     }
     private checkTime(users: Map<string, User>) {
         const time: number = Date.now()
-        users.forEach((user) => {
+        users.forEach(async (user) => {
             if (!user.userData['managerStatus']) return
             if (!user.userData.status) return
             const endTime: number = new Date(<string>user.userData['managerEndTime']).getTime()
@@ -156,15 +156,15 @@ class Manager extends Plugin {
                     jump_text: '',
                     jump_uri: ''
                 }
-                this.sendMsg(msg, user)
+                await this.sendMsg(msg, user)
             } else if (endTime - time <= 7 * 24 * 60 * 60 * 1000 && endTime - time >= 6 * 24 * 60 * 60 * 1000) {
                 tools.Log(`用户${user.nickname}还有${this.getTimeDifference(endTime)}到期，请注意续费`)
                 const msg: msgContent = {
-                    text: `您的辣条黑科技还有${this.getTimeDifference(endTime, time)}到期\n请注意续费\n`,
+                    text: `您的辣条黑科技将于${this.getTimeDifference(endTime, time)}后到期\n到期时间：${user.userData['managerEndTime']}\n请注意续费哦(｀・ω・´)\n`,
                     jump_text: '',
                     jump_uri: ''
                 }
-                this.sendMsg(msg, user)
+                await this.sendMsg(msg, user)
             }
         })
     }
@@ -188,6 +188,7 @@ class Manager extends Plugin {
                 tools.Log(`提醒${receiver.nickname}失败，请检查程序`)
             }
         })
+        await tools.Sleep(5 * 1000)
     }
     private getTimeDifference(endTime: string | number, startTime: string | number = Date.now()) {
         const stime = new Date(startTime).getTime()

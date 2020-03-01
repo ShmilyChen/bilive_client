@@ -205,6 +205,7 @@ class GetStatus extends Plugin {
       tmp['medalData'] = await this._getMedalInfo(user)
       tmp['bagData'] = await this._getBagInfo(user)
       tmp['earnData'] = await this._getEarnInfo(user)
+      tmp['managerEndTime'] = user.userData['managerEndTime']
       rawMsg[uid] = tmp
     }
     this._logMSGHandler(rawMsg)
@@ -401,7 +402,8 @@ EXP：${user.medalData.intimacy}/${user.medalData.next_intimacy} \
 - LV${user.liveData.user_level} (${user.liveData.user_intimacy}/${user.liveData.user_next_intimacy}) \
 [${Math.floor(user.liveData.user_intimacy / user.liveData.user_next_intimacy * 100)}%]\
 排名：${user.liveData.user_level_rank}\n\
-- 金瓜子：${user.liveData.gold} 银瓜子：${user.liveData.silver} 硬币：${user.liveData.billCoin}\n`)
+- 金瓜子：${user.liveData.gold} 银瓜子：${user.liveData.silver} 硬币：${user.liveData.billCoin}\n\
+${user['managerEndTime'] !== ''?`- 到期时间：${user['managerEndTime']}\n`:''}`)
         }
       }()
       medal = function() {
