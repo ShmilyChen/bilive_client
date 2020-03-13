@@ -307,13 +307,13 @@ class GetStatus extends Plugin {
     for (const uid in rawMsg) {
       let line, live, medal, bag, raffle: string = ''
       let user = rawMsg[uid]
-      let ban: string = function(r: boolean, s: boolean) {
+      let ban: string = function (r: boolean, s: boolean) {
         if (r === true) return '已封禁'
         else if (r === false && s === true) return '风暴黑屋'
         else return '未封禁'
       }(user.raffleBan, user.stormBan)
       line = `\n/************************************ 用户 ${user.nickname} 信息 ************************************/\n`
-      live = function() {
+      live = function () {
         if (!user.liveData || user.liveData === undefined) return (`用户信息获取失败`)
         else {
           let vip: string = '普通用户'
@@ -327,7 +327,7 @@ LV${user.liveData.user_level} (${user.liveData.user_intimacy}/${user.liveData.us
         }
       }()
       let medalDiv: string = '\n\n-------------------------- 佩戴勋章信息 --------------------------\n'
-      medal = function() {
+      medal = function () {
         if (user.medalData === false || user.medalData === undefined) return (`勋章信息获取失败`)
         else if (user.medalData === -1) return (`未佩戴勋章`)
         else if (user.medalData === 0) return (`无勋章`)
@@ -339,7 +339,7 @@ EXP：${user.medalData.intimacy}/${user.medalData.next_intimacy} \
         }
       }()
       let bagDiv: string = '\n\n---------------------------- 包裹信息 ----------------------------\n'
-      bag = function() {
+      bag = function () {
         if (!user.bagData || user.bagData === undefined) return (`包裹信息获取失败`)
         else if (user.bagData.length === 0) return (`包裹空空的`)
         else {
@@ -358,7 +358,7 @@ EXP：${user.medalData.intimacy}/${user.medalData.next_intimacy} \
           return tmp
         }
       }()
-      raffle = function() {
+      raffle = function () {
         let tmp: string = '\n本次挂机，此账号共获得奖励：\n'
         if (user.earnData.total.length > 0) user.earnData.total.forEach((earn: any) => tmp += `  ${earn.name} x${earn.num}\n`)
         else tmp += '  无\n'
@@ -379,20 +379,20 @@ EXP：${user.medalData.intimacy}/${user.medalData.next_intimacy} \
   private _pushMSGHandler(rawMsg: any) {
     let pushMsg: string = ''
     pushMsg += `# bilive_client 挂机情况报告\n`
-    pushMsg += `- 本次挂机开始于 ${tools.format("yyyy-mm-dd HH:MM:SS",new Date(this.listenStatus.startTime))}\n`
+    pushMsg += `- 本次挂机开始于 ${tools.format("yyyy-mm-dd HH:MM:SS", new Date(this.listenStatus.startTime))}\n`
     pushMsg += `- 共监听到活动抽奖数：${this.listenStatus.raffle}(${this.todayListenStatus.raffle})\n`
     pushMsg += `- 共监听到大航海抽奖数：${this.listenStatus.lottery}(${this.todayListenStatus.lottery})\n`
     pushMsg += `- 共监听到节奏风暴抽奖数：${this.listenStatus.beatStorm}(${this.todayListenStatus.beatStorm})\n`
     for (const uid in rawMsg) {
       let line, live, medal, bag, raffle: string = ''
       let user = rawMsg[uid]
-      let ban: string = function(r: boolean, s: boolean) {
+      let ban: string = function (r: boolean, s: boolean) {
         if (r === true) return '已封禁'
         else if (r === false && s === true) return '风暴黑屋'
         else return '未封禁'
       }(user.raffleBan, user.stormBan)
       line = `# 用户 *****${user.nickname}***** 信息\n`
-      live = function() {
+      live = function () {
         if (!user.liveData || user.liveData === undefined) return (`## 用户信息获取失败\n`)
         else {
           let vip: string = '普通用户'
@@ -403,10 +403,10 @@ EXP：${user.medalData.intimacy}/${user.medalData.next_intimacy} \
 [${Math.floor(user.liveData.user_intimacy / user.liveData.user_next_intimacy * 100)}%]\
 排名：${user.liveData.user_level_rank}\n\
 - 金瓜子：${user.liveData.gold} 银瓜子：${user.liveData.silver} 硬币：${user.liveData.billCoin}\n\
-${user['managerEndTime'] !== ''?`- 到期时间：${user['managerEndTime']}\n`:''}`)
+${user['managerEndTime'] !== '' ? `- 到期时间：${user['managerEndTime']}\n` : ''}`)
         }
       }()
-      medal = function() {
+      medal = function () {
         if (user.medalData === false || user.medalData === undefined) return (`## 勋章信息获取失败\n`)
         else if (user.medalData === -1) return (`## 未佩戴勋章\n`)
         else if (user.medalData === 0) return (`## 无勋章\n`)
@@ -417,7 +417,7 @@ ${user['managerEndTime'] !== ''?`- 到期时间：${user['managerEndTime']}\n`:'
 排名：${user.medalData.rank}\n`)
         }
       }()
-      bag = function() {
+      bag = function () {
         if (!user.bagData || user.bagData === undefined) return (`## 包裹信息获取失败\n`)
         else if (user.bagData.length === 0) return (`## 包裹空空的\n`)
         else {
@@ -438,7 +438,7 @@ ${user['managerEndTime'] !== ''?`- 到期时间：${user['managerEndTime']}\n`:'
           return (tmp)
         }
       }()
-      raffle = function() {
+      raffle = function () {
         let tmp: string = '## 抽奖情况\n'
         tmp += `### 共获得奖励：\n`
         if (user.earnData.total.length) user.earnData.total.forEach((earn: any) => tmp += `- ${earn.name} x${earn.num}\n`)

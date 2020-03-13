@@ -1,5 +1,5 @@
 module.exports = {
-  apps : [{
+  apps: [{
     name: 'bilive_client',
     script: 'build/app.js',
     args: '',

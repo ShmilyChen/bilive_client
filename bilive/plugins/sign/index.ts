@@ -62,11 +62,11 @@ class Sign extends Plugin {
     })
   }
 }
- /**
- * 签到信息
- *
- * @interface signInfo
- */
+/**
+* 签到信息
+*
+* @interface signInfo
+*/
 interface signInfo {
   code: number
   msg: string

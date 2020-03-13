@@ -72,11 +72,11 @@ class TreasureBox extends Plugin {
     else tools.Log(user.nickname, '宝箱道具', '网络错误')
   }
 }
- /**
- * 在线领瓜子宝箱
- *
- * @interface currentTask
- */
+/**
+* 在线领瓜子宝箱
+*
+* @interface currentTask
+*/
 interface currentTask {
   code: number
   msg: string

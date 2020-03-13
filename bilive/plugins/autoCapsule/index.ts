@@ -54,7 +54,7 @@ class AutoCapsule extends Plugin {
     const capsuleData = capsuleCheck.body.data
     await this._capsule(user, capsuleData.normal.coin)
     if (<boolean>user.userData['autoColorCapsule'] && capsuleData.colorful.status)
-    await this._capsule(user, capsuleData.colorful.coin, 'colorful')
+      await this._capsule(user, capsuleData.colorful.coin, 'colorful')
   }
   /**
    * 进行分类扭蛋

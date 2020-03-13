@@ -101,11 +101,11 @@ class SendGift extends Plugin {
     })
   }
 }
- /**
- * 房间信息
- *
- * @interface roomInit
- */
+/**
+* 房间信息
+*
+* @interface roomInit
+*/
 interface roomInit {
   code: number
   msg: string

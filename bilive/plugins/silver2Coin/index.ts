@@ -63,11 +63,11 @@ class Coin extends Plugin {
     })
   }
 }
- /**
- * 银瓜子兑换硬币返回
- *
- * @interface silver2coin
- */
+/**
+* 银瓜子兑换硬币返回
+*
+* @interface silver2coin
+*/
 interface silver2coin {
   code: number
   msg: string

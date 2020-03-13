@@ -84,11 +84,11 @@ class SignGroup extends Plugin {
     })
   }
 }
- /**
- * 应援团
- *
- * @interface linkGroup
- */
+/**
+* 应援团
+*
+* @interface linkGroup
+*/
 interface linkGroup {
   code: number
   msg: string

@@ -94,7 +94,7 @@ export class Options {
       else console.error(data)
     }
     this._ws.onmessage = _data => {
-      const data = Object.assign({}, _data, { data: B64XorCipher.decode(window.netkey, _data.data)})
+      const data = Object.assign({}, _data, { data: B64XorCipher.decode(window.netkey, _data.data) })
       let message: message;
       const modalOptions = {
         onOk() {
@@ -114,10 +114,10 @@ export class Options {
         } else {
           modal(Object.assign({ body: '密钥错误，请重新输入!' }, modalOptions))
         }
-        const data = Object.assign({}, _data, { data: B64XorCipher.decode(window.netkey, _data.data)})
+        const data = Object.assign({}, _data, { data: B64XorCipher.decode(window.netkey, _data.data) })
         message = JSON.parse(data.data)
       }
-      
+
       const ts = message.ts
       if (ts != null && typeof this.__callback[ts] === 'function') {
         delete message.ts

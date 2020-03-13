@@ -14,7 +14,7 @@ class AutoUpdate extends Plugin {
   public async load() {
     this.loaded = true
   }
-  public async start({}, newUser: boolean) {
+  public async start({ }, newUser: boolean) {
     if (!newUser) this._checkForUpdate()
   }
   public async loop({ cstMin, cstHour }: { cstMin: number, cstHour: number }) {
@@ -61,7 +61,7 @@ class AutoUpdate extends Plugin {
   private async gitBranch() {
     let branch = await this.execCMD('git rev-parse --abbrev-ref --symbolic-full-name @{u}')
     if (branch === undefined) return tools.ErrorLog(`获取本地分支信息失败`)
-    return branch.substr(0, branch.length-1)
+    return branch.substr(0, branch.length - 1)
   }
   /**
    * 检查更新
@@ -82,9 +82,9 @@ class AutoUpdate extends Plugin {
       if (fetchStatus === undefined) return tools.ErrorLog(`获取最新版本失败`)
       let remoteHash = await this.execCMD(`git rev-parse ${branch}`)
       if (remoteHash === undefined) return tools.ErrorLog(`获取最新版本信息失败`)
-      if (localHash === remoteHash) tools.Log(`当前版本 (${branch}@${localHash.substr(0,8)}) 已是最新版本`)
+      if (localHash === remoteHash) tools.Log(`当前版本 (${branch}@${localHash.substr(0, 8)}) 已是最新版本`)
       else {
-        tools.Log(`发现新版本 (${branch}@${remoteHash.substr(0,8)}) 10秒后开始更新`)
+        tools.Log(`发现新版本 (${branch}@${remoteHash.substr(0, 8)}) 10秒后开始更新`)
         tools.emit('systemMSG', <systemMSG>{
           message: `发现新版本 即将进行自动升级`,
           options: Options._,

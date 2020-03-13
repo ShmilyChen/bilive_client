@@ -198,16 +198,16 @@ async function showChangeNetkey() {
   // 保存高级设置
   saveNewNetkeyButton.onclick = async () => {
     modal()
-    if(newNetkey1Input.value === newNetkey2Input.value) {
+    if (newNetkey1Input.value === newNetkey2Input.value) {
       window.newNetkey = newNetkey1Input.value
-      await options.setNewNetKey({netkey: window.newNetkey})
+      await options.setNewNetKey({ netkey: window.newNetkey })
       newNetkey1Input.value = ''
       newNetkey2Input.value = ''
       modal({ body: '修改成功！' })
     } else {
       modal({ body: '两次输入的密钥请保持一致！' })
     }
-    
+
   }
   netkeyReturnButton.onclick = () => {
     danimation(optionDiv)
@@ -433,16 +433,16 @@ function getUtilConfigTemplate(utilData: utilData): DocumentFragment {
         checkboxInput.onchange = () => utilData[key].value = checkboxInput.checked
         break
       case 'user':
-          for (let i = 0; i < (<string[]>utilData[key].list).length; i++) {
-            let option = document.createElement("option")
-            const userStr = (<string[]>utilData[key].list)[i]
-            option.setAttribute("label", userStr)
-            option.setAttribute("value", userStr)
-            inputInput.appendChild(option)
-          }
-          inputInput.value = <string>itemValue
-          inputInput.onchange = () => utilData[key].value = inputInput.value
-          break
+        for (let i = 0; i < (<string[]>utilData[key].list).length; i++) {
+          let option = document.createElement("option")
+          const userStr = (<string[]>utilData[key].list)[i]
+          option.setAttribute("label", userStr)
+          option.setAttribute("value", userStr)
+          inputInput.appendChild(option)
+        }
+        inputInput.value = <string>itemValue
+        inputInput.onchange = () => utilData[key].value = inputInput.value
+        break
       default:
         break
     }

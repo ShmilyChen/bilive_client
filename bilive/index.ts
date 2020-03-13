@@ -12,7 +12,7 @@ const FSreadDir = util.promisify(fs.readdir)
  * @class BiLive
  */
 class BiLive {
-  constructor() {}
+  constructor() { }
   // 系统消息监听
   private _Listener!: Listener
   // WS服务器

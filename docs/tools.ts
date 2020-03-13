@@ -11,7 +11,7 @@ export function xorStrings(key: string, input: string): string {
   }
   return output
 }
-  
+
 export const B64XorCipher = {
   encode(key: string, data: string): string {
     return (data && data !== '' && key !== '') ? new Buffer(xorStrings(key, data), 'utf8').toString('base64') : data

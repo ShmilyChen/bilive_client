@@ -30,7 +30,7 @@ class Listener extends EventEmitter {
    * @type {Client}
    * @memberof Listener
    */
-  private _MainWSServer: Client = new Client('','')
+  private _MainWSServer: Client = new Client('', '')
   /**
    * 备用WS服务器
    *
@@ -38,7 +38,7 @@ class Listener extends EventEmitter {
    * @type {Client}
    * @memberof Listener
    */
-  private _BackupWSServer: Client = new Client('','')
+  private _BackupWSServer: Client = new Client('', '')
   /**
    * 抽奖ID
    *
