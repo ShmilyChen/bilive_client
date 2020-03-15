@@ -12,17 +12,17 @@ const FSwriteFile = util.promisify(fs.writeFile)
 class Options extends EventEmitter {
   constructor() {
     super()
-    this._dirname = __dirname + '/../'
+    this._dirname = __dirname + (process.env.npm_package_scripts_start === 'node build/app.js' ? '/../../' : '/../')
     // 检查是否有options目录
     const hasDir = fs.existsSync(this._dirname + 'options/')
     if (!hasDir) fs.mkdirSync(this._dirname + 'options/')
     // 读取默认设置文件
-    const defaultOptionBuffer = fs.readFileSync(this._dirname + 'build/options.default.json')
+    const defaultOptionBuffer = fs.readFileSync(this._dirname + 'bilive/options.default.json')
     this._ = <options>JSON.parse(defaultOptionBuffer.toString())
     this._.util = {}
     // 复制默认设置文件到用户设置文件
     const hasFile = fs.existsSync(this._dirname + 'options/options.json')
-    if (!hasFile) fs.copyFileSync(this._dirname + 'build/options.default.json', this._dirname + 'options/options.json')
+    if (!hasFile) fs.copyFileSync(this._dirname + 'bilive/options.default.json', this._dirname + 'options/options.json')
     // 读取用户设置文件
     const userOptionBuffer = fs.readFileSync(this._dirname + 'options/options.json')
     this._userOption = this._
@@ -135,7 +135,7 @@ class Options extends EventEmitter {
   }
   /**
    * 验证JSON可读性
-   * 
+   *
    * @returns
    * @memberof Options
    */
@@ -163,7 +163,7 @@ class Options extends EventEmitter {
   }
   /**
    * 备份设置文件
-   * 
+   *
    * @memberof Options
    */
   public async backup() {
@@ -172,7 +172,7 @@ class Options extends EventEmitter {
   }
   /**
    * 还原设置文件
-   * 
+   *
    * @memberof Options
    */
   public async restore() {

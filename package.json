@@ -7,11 +7,13 @@
     "build": "npm run clean && npm run build:client && npm run build:view",
     "build:client": "tsc -p tsconfig.json && npm-run-posix-or-windows copy:client",
     "build:view": "webpack --config docs/webpack.conf.js && npm-run-posix-or-windows copy:view",
-    "copy:client": "cp bilive/options.default.json build/",
-    "copy:client:windows": "xcopy bilive\\options.default.json build\\ /Y",
+    "copy:client": "cp bilive/options.default.json build/bilive/",
+    "copy:client:windows": "xcopy bilive\\options.default.json build\\bilive\\ /Y",
     "copy:view": "cp -r docs/view/ docs/index.html build/",
     "copy:view:windows": "xcopy docs\\view\\* build\\view\\ /Y && xcopy docs\\index.html build\\ /Y",
-    "clean": "rimraf build && mkdir build && rimraf logs && mkdir logs",
+    "clean": "npm-run-posix-or-windows rmbuild && mkdir build && rimraf logs && mkdir logs",
+    "rmbuild": "rm -rf build",
+    "rmbuild:windows": "rmdir /S /Q build || exit 0",
     "start": "node build/app.js",
     "dev": "npm run build && npm run start"
   },
@@ -36,14 +38,14 @@
     "cz-conventional-changelog": "^3.0.2",
     "ts-loader": "^6.2.1",
     "webpack": "^4.41.2",
-    "webpack-cli": "^3.3.10"
-  },
-  "dependencies": {
+    "webpack-cli": "^3.3.10",
     "buffer": "^5.4.3",
     "npm-run-posix-or-windows": "^2.0.2",
-    "request": "^2.88.0",
-    "rimraf": "^3.0.0",
     "typescript": "^3.7.2",
+    "rimraf": "^3.0.0"
+  },
+  "dependencies": {
+    "request": "^2.88.0",
     "ws": "^7.2.0"
   }
 }
