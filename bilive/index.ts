@@ -91,7 +91,7 @@ class BiLive {
     const plugins = await FSreadDir(pluginsPath)
     for (const pluginName of plugins) {
       const { default: plugin }: { default: IPlugin } = await import(`${pluginsPath}/${pluginName}/index.js`)
-      if (typeof plugin.load === 'function') await plugin.load({ defaultOptions: Options._, whiteList: Options.whiteList })
+      if (typeof plugin.load === 'function') await plugin.load({ defaultOptions: Options._, whiteList: Options.whiteList, plugins })
       if (plugin.loaded) {
         const { name, description, version, author } = plugin
         tools.Log(`已加载: ${name}, 用于: ${description}, 版本: ${version}, 作者: ${author}`)
@@ -109,7 +109,6 @@ class BiLive {
   public Listener() {
     this._Listener = new Listener()
     this._Listener
-      .on('smallTV', (raffleMessage: raffleMessage) => this._Message(raffleMessage))
       .on('raffle', (raffleMessage: raffleMessage) => this._Message(raffleMessage))
       .on('lottery', (lotteryMessage: lotteryMessage) => this._Message(lotteryMessage))
       .on('pklottery', (lotteryMessage: lotteryMessage) => this._Message(lotteryMessage))

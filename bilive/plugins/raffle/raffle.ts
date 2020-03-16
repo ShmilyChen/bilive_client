@@ -1,5 +1,4 @@
 import { EventEmitter } from 'events'
-import { Options as requestOptions } from 'request'
 import { tools, AppClient } from '../../plugin'
 import Options from '../../options'
 
@@ -22,6 +21,7 @@ class Raffle extends EventEmitter {
     this._user = user
     this._options = options
   }
+
   /**
    * 抽奖设置
    *
@@ -54,6 +54,7 @@ class Raffle extends EventEmitter {
    * @memberof Raffle
    */
   private _url!: string
+
   /**
    * 开始抽奖
    *
@@ -74,9 +75,11 @@ class Raffle extends EventEmitter {
       case 'beatStorm':
         this._BeatStorm()
         break
-      default: break
+      default:
+        break
     }
   }
+
   /**
    * Raffle类抽奖
    *
@@ -87,6 +90,7 @@ class Raffle extends EventEmitter {
     await tools.Sleep((<raffleMessage>this._raffleMessage).time_wait * 1000)
     this._RaffleAward()
   }
+
   /**
    * 获取抽奖结果
    *
@@ -95,7 +99,7 @@ class Raffle extends EventEmitter {
    */
   private async _RaffleAward() {
     const { cmd, id, roomID, title, type } = <raffleMessage>this._raffleMessage
-    const reward: requestOptions = {
+    const reward: XHRoptions = {
       method: 'POST',
       uri: `${this._url}/getAward`,
       body: AppClient.signQueryBase(`${this._user.tokenQuery}&raffleId=${id}&roomid=${roomID}&type=${type}`),
@@ -114,12 +118,17 @@ class Raffle extends EventEmitter {
               options: this._options,
               user: this._user
             })
-          }
-          else {
+          } else {
             const msg = `${this._user.nickname} ${title} ${id} 获得 ${gift.gift_num} 个${gift.gift_name}`
             this.emit('msg', {
               cmd: 'earn',
-              data: { uid: this._user.uid, nickname: this._user.nickname, type: cmd, name: gift.gift_name, num: gift.gift_num }
+              data: {
+                uid: this._user.uid,
+                nickname: this._user.nickname,
+                type: cmd,
+                name: gift.gift_name,
+                num: gift.gift_num
+              }
             })
             tools.Log(msg)
             if (gift.gift_name.includes('小电视')) tools.emit('systemMSG', <systemMSG>{
@@ -128,10 +137,12 @@ class Raffle extends EventEmitter {
               user: this._user
             })
           }
-        }
-        else tools.Log(this._user.nickname, title, id, raffleAward.body)
+        } else tools.Log(this._user.nickname, title, id, raffleAward.body)
         if (raffleAward.body.msg === '访问被拒绝')
-          this.emit('msg', { cmd: 'ban', data: { uid: this._user.uid, type: 'raffle', nickname: this._user.nickname } })
+          this.emit('msg', {
+            cmd: 'ban',
+            data: { uid: this._user.uid, type: 'raffle', nickname: this._user.nickname }
+          })
         else if (raffleAward.body.code === 500 && raffleAward.body.msg === '系统繁忙') {
           await tools.Sleep(500)
           this._RaffleAward()
@@ -139,6 +150,7 @@ class Raffle extends EventEmitter {
       }
     })
   }
+
   /**
    * Lottery类抽奖
    *
@@ -147,7 +159,7 @@ class Raffle extends EventEmitter {
    */
   private async _Lottery() {
     const { id, roomID, title, type } = <lotteryMessage>this._raffleMessage
-    const reward: requestOptions = {
+    const reward: XHRoptions = {
       method: 'POST',
       uri: `${this._url}/join`,
       body: AppClient.signQueryBase(`${this._user.tokenQuery}&id=${id}&roomid=${roomID}&type=${type}`),
@@ -170,10 +182,12 @@ class Raffle extends EventEmitter {
             }
           })
           tools.Log(this._user.nickname, title, id, data.message)
-        }
-        else tools.Log(this._user.nickname, title, id, lotteryReward.body)
+        } else tools.Log(this._user.nickname, title, id, lotteryReward.body)
         if (lotteryReward.body.msg === '访问被拒绝')
-          this.emit('msg', { cmd: 'ban', data: { uid: this._user.uid, type: 'raffle', nickname: this._user.nickname } })
+          this.emit('msg', {
+            cmd: 'ban',
+            data: { uid: this._user.uid, type: 'raffle', nickname: this._user.nickname }
+          })
         else if (lotteryReward.body.code === 500 && lotteryReward.body.msg === '系统繁忙') {
           await tools.Sleep(500)
           this._Lottery()
@@ -181,6 +195,7 @@ class Raffle extends EventEmitter {
       }
     })
   }
+
   /**
    * PKLottery类抽奖
    *
@@ -189,7 +204,7 @@ class Raffle extends EventEmitter {
    */
   private async _PKLottery() {
     const { id, roomID, title } = <lotteryMessage>this._raffleMessage
-    const reward: requestOptions = {
+    const reward: XHRoptions = {
       method: 'POST',
       uri: `${this._url}/join`,
       body: `roomid=${roomID}&id=${id}&csrf_token=${tools.getCookie(this._user.jar, 'bili_jct')}&csrf=${tools.getCookie(this._user.jar, 'bili_jct')}`,
@@ -212,11 +227,11 @@ class Raffle extends EventEmitter {
             }
           })
           tools.Log(this._user.nickname, title, id, '获得', data.award_text)
-        }
-        else tools.Log(this._user.nickname, title, id, pkReward.body)
+        } else tools.Log(this._user.nickname, title, id, pkReward.body)
       }
     })
   }
+
   /**
    * 节奏风暴
    *
@@ -225,7 +240,7 @@ class Raffle extends EventEmitter {
    */
   private async _BeatStorm() {
     const { id, roomID, title } = this._raffleMessage
-    const join: requestOptions = {
+    const join: XHRoptions = {
       method: 'POST',
       uri: `${this._url}/join`,
       body: AppClient.signQuery(`${this._user.tokenQuery}&${AppClient.baseQuery}&id=${id}&roomid=${roomID}`),
@@ -247,18 +262,32 @@ class Raffle extends EventEmitter {
         const content = joinStorm.body.data
         if (content !== undefined && content.gift_num > 0) {
           tools.Log(this._user.nickname, title, id, `第${i}次尝试`, `${content.mobile_content} 获得 ${content.gift_num} 个${content.gift_name}`)
-          this.emit('msg', { cmd: 'earn', data: { uid: this._user.uid, nickname: this._user.nickname, type: 'beatStorm', name: content.gift_name, num: content.gift_num } })
+          this.emit('msg', {
+            cmd: 'earn',
+            data: {
+              uid: this._user.uid,
+              nickname: this._user.nickname,
+              type: 'beatStorm',
+              name: content.gift_name,
+              num: content.gift_num
+            }
+          })
           break
         }
       }
       // else tools.Log(this._user.nickname, title, id, `第${i}次尝试`, joinStorm.body.msg)
       if (joinStorm.body.msg === '访问被拒绝') {
-        this.emit('msg', { cmd: 'ban', data: { uid: this._user.uid, type: 'beatStorm', nickname: this._user.nickname } })
+        this.emit('msg', {
+          cmd: 'ban',
+          data: { uid: this._user.uid, type: 'beatStorm', nickname: this._user.nickname }
+        })
         break
-      }
-      else if (joinStorm.body.msg === '已经领取奖励') break
+      } else if (joinStorm.body.msg === '已经领取奖励') break
       else if (joinStorm.body.msg === '节奏风暴抽奖过期') break
-      if (joinStorm.body.msg === '你错过了奖励，下次要更快一点哦~') this.emit('msg', { cmd: 'unban', data: { uid: this._user.uid, type: 'beatStorm', nickname: this._user.nickname } })
+      if (joinStorm.body.msg === '你错过了奖励，下次要更快一点哦~') this.emit('msg', {
+        cmd: 'unban',
+        data: { uid: this._user.uid, type: 'beatStorm', nickname: this._user.nickname }
+      })
       await tools.Sleep((<number[]>Options._.advConfig.stormSetting)[0])
     }
   }
@@ -275,6 +304,7 @@ interface raffleReward {
   message: string
   data: raffleRewardData
 }
+
 interface raffleRewardData {
   raffleId: number
   type: string
@@ -286,7 +316,9 @@ interface raffleRewardData {
   gift_content: string
   status?: number
 }
+
 type raffleAward = raffleReward
+
 /**
  * 抽奖lottery
  *
@@ -298,6 +330,7 @@ interface lotteryReward {
   message: string
   data: lotteryRewardData
 }
+
 interface lotteryRewardData {
   id: number
   type: string
@@ -309,15 +342,17 @@ interface lotteryRewardData {
   privilege_type: 1 | 2 | 3
   award_list: lotteryRewardDataAwardlist[]
 }
+
 interface lotteryRewardDataAwardlist {
   name: string
   img: string
   type: number
   content: string
 }
+
 /**
  * 大乱斗抽奖
- * 
+ *
  * @interface pkLotteryReward
  */
 interface pkLotteryReward {
@@ -326,6 +361,7 @@ interface pkLotteryReward {
   msg: string
   ttl: number
 }
+
 interface pkLotteryRewardData {
   award_id: string,
   award_image: string,
@@ -335,6 +371,7 @@ interface pkLotteryRewardData {
   id: number,
   title: string
 }
+
 /**
  * 节奏跟风返回值
  *
@@ -346,6 +383,7 @@ interface joinStorm {
   msg: string
   data: joinStormData
 }
+
 interface joinStormData {
   gift_id: number
   title: string
@@ -355,4 +393,5 @@ interface joinStormData {
   gift_num: number
   gift_name: string
 }
+
 export default Raffle

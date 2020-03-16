@@ -1,5 +1,5 @@
-import { Options as requestOptions } from 'request'
 import Plugin, { tools, AppClient } from '../../plugin'
+
 class Coin extends Plugin {
   constructor() {
     super()
@@ -45,7 +45,7 @@ class Coin extends Plugin {
   private _silver2coin(users: Map<string, User>) {
     users.forEach(async (user, uid) => {
       if (this._silver2coinList.get(uid) || !user.userData['silver2coin']) return
-      const exchange: requestOptions = {
+      const exchange: XHRoptions = {
         method: 'POST',
         uri: `https://api.live.bilibili.com/AppExchange/silver2coin?${AppClient.signQueryBase(user.tokenQuery)}`,
         json: true,

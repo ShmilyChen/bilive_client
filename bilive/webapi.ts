@@ -75,7 +75,8 @@ class WebAPI extends EventEmitter {
         this._WebSocketServer(server)
         tools.Log(`已监听 ${host}:${port}`)
       })
-    } else {
+    }
+    else {
       if (fs.existsSync(listen.path)) fs.unlinkSync(listen.path)
       server.listen(listen.path, () => {
         fs.chmodSync(listen.path, '666')
@@ -151,8 +152,10 @@ class WebAPI extends EventEmitter {
 
   /**
    * 监听客户端发来的消息, CMD为关键字
-   * @param message
+   *
    * @private
+   * @param {message} message
+   * @memberof WebAPI
    */
   private async _onCMD(message: message) {
     const cmd = message.cmd
@@ -292,7 +295,8 @@ class WebAPI extends EventEmitter {
                 if (status === 'captcha') captcha = captchaUser.captchaJPEG
                 else if (Options.user.has(setUID)) Options.emit('newUser', captchaUser)
               }
-            } else if (!userData.status && Options.user.has(setUID)) (<User>Options.user.get(setUID)).Stop()
+            }
+            else if (!userData.status && Options.user.has(setUID)) (<User>Options.user.get(setUID)).Stop()
             Options.save()
             if (captcha === '') this._Send({ cmd, ts, uid: setUID, data: userData })
             else this._Send({ cmd, ts, uid: setUID, msg: 'captcha', data: userData, captcha })

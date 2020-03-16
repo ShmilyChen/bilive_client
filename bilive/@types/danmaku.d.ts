@@ -760,6 +760,24 @@ interface NOTICE_MSG_Side {
   border: string
 }
 /**
+ * 房间通知
+ * {"cmd":"NOTICE_MSG_H5","data":{"msg":"<%s>降临在<%s>的直播间，参战获大奖！","value":["混沌机甲 mSv型","老骚豆腐"],"special_index":[2],"room_id":763679,"ts":1562655097},"_roomid":21203168}
+ *
+ * @interface NOTICE_MSG_H5
+ * @extends {danmuJson}
+ */
+interface NOTICE_MSG_H5 extends danmuJson {
+  data: NOTICE_MSG_H5_Data
+}
+interface NOTICE_MSG_H5_Data {
+  msg: string
+  value: string[]
+  special_index: number[]
+  room_id: number
+  ts: number
+}
+
+/**
  * 连麦PK
  *
  * @interface PK_MIC_Base
@@ -788,7 +806,7 @@ interface PK_BATTLE_Base extends danmuJson {
  * 再次PK匹配
  * {"cmd":"PK_AGAIN","pk_id":8159,"pk_status":400,"data":{"new_pk_id":8179,"init_id":13566,"match_id":7326390,"escape_time":5,"is_portrait":true,"uname":"宇天学长","face":"http://i2.hdslb.com/bfs/face/488dda4a85251f9d0fd9ad82a733f874b5cec585.jpg","uid":261738266},"roomid":13566,"_roomid":13566}
  * {"cmd":"PK_AGAIN","pk_id":355519,"pk_status":400,"data":{"new_pk_id":355576,"init_id":21447960,"match_id":21435682,"escape_all_time":10,"escape_time":10,"is_portrait":true,"uname":"我回来的晚","face":"http://i1.hdslb.com/bfs/face/526dc5171e40ad29ae07e1157df1e34a6bbbc51c.jpg","uid":60261316},"_roomid":21447960}
- * 
+ *
  * @interface PK_AGAIN
  * @extends {PK_MIC_Base}
  */
@@ -1019,7 +1037,7 @@ interface PK_CLICK_AGAIN extends PK_MIC_Base { }
 /**
  * PK结束
  * {"cmd":"PK_END","pk_id":3291,"pk_status":400,"data":{"init_id":273022,"match_id":52320,"punish_topic":"惩罚：唱《九妹》"},"_roomid":273022}
- * 
+ *
  * @interface PK_END
  * @extends {PK_MIC_Base}
  */
@@ -1053,7 +1071,7 @@ interface PK_INVITE_CANCEL extends danmuJson {
 }
 /**
  * PK邀请失败
- * {"cmd":"PK_INVITE_FAIL","pk_invite_status":1100,"invite_id":28651,"_roomid":8531717} 
+ * {"cmd":"PK_INVITE_FAIL","pk_invite_status":1100,"invite_id":28651,"_roomid":8531717}
  *
  * @interface PK_INVITE_FAIL
  * @extends {danmuJson}
@@ -1442,7 +1460,7 @@ interface Room_Admin_Entrance extends danmuJson {
 /**
  * 管理员变更
  * {"cmd":"ROOM_ADMINS","uids":[21799502,324617099,37495809,280437450,25437575,61067789,20936602,28222739,901731,242150444,198506415,241374315,186912549,225688909,267471636,343632753,356529683,366057316,343623777,355195058,43578442,32429631,305349928,16722360,18037673,227478182,11258321,281388699,19033182,26062349,12820449,67176805,8535022,10122445,23488236,13453890,25815637,253966728,15689661,102630099,93423185,1560068,59151689,7153655,313867946,285087000,39529986,89557885,385052272,382836708,319250781,247950077,287219935,349628613,613749],"_roomid":3182251}
- * 
+ *
  * @interface ROOM_ADMINS
  * @extends {danmuJson}
  */
@@ -1624,7 +1642,7 @@ interface ROOM_REAL_TIME_MESSAGE_UPDATE_Data {
  * 房间屏蔽
  * {"cmd":"ROOM_SHIELD","type":0,"user":"","keyword":"","roomid":939654,"_roomid":939654}
  * {"cmd":"ROOM_SHIELD","type":1,"user":"","keyword":"","roomid":14073662,"_roomid":14073662}
- * 
+ *
  * @interface ROOM_SHIELD
  * @extends {danmuJson}
  */

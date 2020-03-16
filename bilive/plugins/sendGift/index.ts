@@ -1,4 +1,3 @@
-import { Options as requestOptions } from 'request'
 import Plugin, { tools, AppClient } from '../../plugin'
 
 class SendGift extends Plugin {
@@ -19,10 +18,10 @@ class SendGift extends Plugin {
     }
     whiteList.add('sendGift')
     // 自动送礼房间
-    defaultOptions.newUserData['sendGiftRoom'] = 0
+    defaultOptions.newUserData['sendGiftRoom'] = 1760129
     defaultOptions.info['sendGiftRoom'] = {
       description: '自动送礼房间',
-      tip: '要自动送出礼物的房间号',
+      tip: '要自动送出礼物的房间号，默认为1760129，可自行修改',
       type: 'number'
     }
     whiteList.add('sendGiftRoom')
@@ -46,7 +45,7 @@ class SendGift extends Plugin {
       if (!user.userData['sendGift'] || user.userData['sendGiftRoom'] === 0) return
       const roomID = user.userData.sendGiftRoom
       // 获取房间信息
-      const room: requestOptions = {
+      const room: XHRoptions = {
         uri: `https://api.live.bilibili.com/room/v1/Room/mobileRoomInit?id=${roomID}}`,
         json: true
       }
@@ -57,7 +56,7 @@ class SendGift extends Plugin {
           const mid = roomInit.body.data.uid
           const room_id = roomInit.body.data.room_id
           // 获取包裹信息
-          const bag: requestOptions = {
+          const bag: XHRoptions = {
             uri: `https://api.live.bilibili.com/gift/v2/gift/m_bag_list?${AppClient.signQueryBase(user.tokenQuery)}`,
             json: true,
             headers: user.headers
@@ -69,7 +68,7 @@ class SendGift extends Plugin {
                 for (const giftData of bagInfo.body.data) {
                   if (giftData.expireat > 0 && giftData.expireat < 24 * 60 * 60) {
                     // expireat单位为分钟, 永久礼物值为0
-                    const send: requestOptions = {
+                    const send: XHRoptions = {
                       method: 'POST',
                       uri: `https://api.live.bilibili.com/gift/v2/live/bag_send?${AppClient.signQueryBase(user.tokenQuery)}`,
                       body: `uid=${giftData.uid}&ruid=${mid}&gift_id=${giftData.gift_id}&gift_num=${giftData.gift_num}\

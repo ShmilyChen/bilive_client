@@ -1,5 +1,5 @@
-import { Options as requestOptions } from 'request'
 import Plugin, { tools, AppClient } from '../../plugin'
+
 class Sign extends Plugin {
   constructor() {
     super()
@@ -45,7 +45,7 @@ class Sign extends Plugin {
   private _sign(users: Map<string, User>) {
     users.forEach(async (user, uid) => {
       if (this._signList.get(uid) || !user.userData['doSign']) return
-      const sign: requestOptions = {
+      const sign: XHRoptions = {
         uri: `https://api.live.bilibili.com/rc/v1/Sign/doSign?${AppClient.signQueryBase(user.tokenQuery)}`,
         json: true,
         headers: user.headers

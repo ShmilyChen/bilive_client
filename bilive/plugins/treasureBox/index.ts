@@ -1,4 +1,3 @@
-import { Options as requestOptions } from 'request'
 import Plugin, { tools, AppClient } from '../../plugin'
 
 class TreasureBox extends Plugin {
@@ -49,7 +48,7 @@ class TreasureBox extends Plugin {
   private async _treasureBoxUser(uid: string, user: User) {
     if (!user.userData['treasureBox']) return
     // 获取宝箱状态,换房间会重新冷却
-    const current: requestOptions = {
+    const current: XHRoptions = {
       uri: `https://api.live.bilibili.com/mobile/freeSilverCurrentTask?${AppClient.signQueryBase(user.tokenQuery)}`,
       json: true,
       headers: user.headers
@@ -58,7 +57,7 @@ class TreasureBox extends Plugin {
     if (currentTask !== undefined && currentTask.response.statusCode === 200) {
       if (currentTask.body.code === 0) {
         await tools.Sleep(currentTask.body.data.minute * 60 * 1000)
-        const award: requestOptions = {
+        const award: XHRoptions = {
           uri: `https://api.live.bilibili.com/mobile/freeSilverAward?${AppClient.signQueryBase(user.tokenQuery)}`,
           json: true,
           headers: user.headers

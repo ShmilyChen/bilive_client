@@ -1,4 +1,4 @@
-import { CookieJar as requestCookieJar } from 'request'
+import { CookieJar } from 'tough-cookie'
 import tools from './lib/tools'
 import AppClient from './lib/app_client'
 import Options, { apiLiveOrigin, liveOrigin } from './options'
@@ -36,7 +36,7 @@ class Online extends AppClient {
   public set refreshToken(refreshToken: string) { this.userData.refreshToken = refreshToken }
   public get cookieString(): string { return this.userData.cookie }
   public set cookieString(cookieString: string) { this.userData.cookie = cookieString }
-  public jar!: requestCookieJar
+  public jar!: CookieJar
   /**
    * 验证码 DataURL
    *
@@ -70,6 +70,7 @@ class Online extends AppClient {
   public async Start(): Promise<'captcha' | 'stop' | void> {
     clearTimeout(this._heartTimer)
     if (!Options.user.has(this.uid)) Options.user.set(this.uid, this)
+    if (this.jar === undefined) this.jar = tools.setCookie(this.cookieString)
     const test = await this.getOnlineInfo()
     if (test !== undefined) return test
     this._heartLoop()
@@ -132,24 +133,26 @@ class Online extends AppClient {
    */
   protected async _onlineHeart(): Promise<'cookieError' | 'tokenError' | void> {
     const roomID = Options._.advConfig.eventRooms[0]
-    const heartPC = await tools.XHR<userOnlineHeart>({
+    const online: XHRoptions = {
       method: 'POST',
       uri: `${apiLiveOrigin}/User/userOnlineHeart`,
       body: `csrf_token=${tools.getCookie(this.jar, 'bili_jct')}&csrf=${tools.getCookie(this.jar, 'bili_jct')}&visit_id=`,
       jar: this.jar,
       json: true,
       headers: { 'Referer': `${liveOrigin}/${Options.getShortRoomID(roomID)}` }
-    })
-    if (heartPC !== undefined && heartPC.response.statusCode === 200 && heartPC.body.code === 3) return 'cookieError'
+    }
+    const heartPC = await tools.XHR<userOnlineHeart>(online)
+    if (heartPC !== undefined && heartPC.response.statusCode === 200 && heartPC.body.code === -101) return 'cookieError'
     // 客户端
-    const heart = await tools.XHR<userOnlineHeart>({
+    const heartbeat: XHRoptions = {
       method: 'POST',
       uri: `${apiLiveOrigin}/heartbeat/v1/OnLine/mobileOnline?${AppClient.signQueryBase(this.tokenQuery)}`,
       body: `room_id=${Options.getLongRoomID(roomID)}&scale=xxhdpi`,
       json: true,
       headers: this.headers
-    }, 'Android')
-    if (heart !== undefined && heart.response.statusCode === 200 && heart.body.code === 3) return 'tokenError'
+    }
+    const heart = await tools.XHR<userOnlineHeart>(heartbeat, 'Android')
+    if (heart !== undefined && heart.response.statusCode === 200 && heart.body.code === -101) return 'tokenError'
   }
   /**
    * cookie失效
@@ -181,6 +184,7 @@ class Online extends AppClient {
     tools.Log(this.nickname, 'Token已失效')
     const login = await this.login()
     if (login.status === AppClient.status.success) {
+      clearTimeout(this._heartTimer)
       this.captchaJPEG = ''
       this.jar = tools.setCookie(this.cookieString)
       await this.getOnlineInfo()
@@ -194,6 +198,7 @@ class Online extends AppClient {
         this.captchaJPEG = `data:image/jpeg;base64,${captcha.data.toString('base64')}`
       this._heartTimer = setTimeout(() => this.Stop(), 60 * 1000)
       tools.Log(this.nickname, '验证码错误')
+      return 'captcha'
     }
     else if (login.status === AppClient.status.error) {
       this.Stop()

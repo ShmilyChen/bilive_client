@@ -7,34 +7,41 @@ class AutoUpdate extends Plugin {
   constructor() {
     super()
   }
+
   public name = '自动更新'
   public description = '自动更新本地git，配合pm2可实现自动更新'
   public version = '0.0.3'
   public author = 'Vector000'
+
   public async load() {
-    this.loaded = true
+    this.loaded = false
   }
+
   public async start({ }, newUser: boolean) {
     if (!newUser) this._checkForUpdate()
   }
+
   public async loop({ cstMin, cstHour }: { cstMin: number, cstHour: number }) {
     if (cstMin === 0 && cstHour % 12 === 6) this._checkForUpdate()
   }
+
   // 根目录路径
   private _dirname = __dirname + '/../../..'
+
   /**
    * 检查当前应用目录是否有对应git仓库
    *
    * @private
-   * 
+   *
    */
   private async _checkPath(dir: string) {
     if (fs.existsSync(`${dir}/.git`)) return true
     else return false
   }
+
   /**
    * 运行指定命令，并返回输出
-   * 
+   *
    * @param {string} cmd
    * @private
    */
@@ -53,9 +60,10 @@ class AutoUpdate extends Plugin {
       })
     })
   }
+
   /**
    * git branch, 获取当前的git分支
-   * 
+   *
    * @private
    */
   private async gitBranch() {
@@ -63,13 +71,15 @@ class AutoUpdate extends Plugin {
     if (branch === undefined) return tools.ErrorLog(`获取本地分支信息失败`)
     return branch.substr(0, branch.length - 1)
   }
+
   /**
    * 检查更新
-   * 
+   *
    * @private
-   * 
+   *
    */
   private async _checkForUpdate() {
+    if (await this.execCMD('git --version') === undefined || await this.execCMD('pm2 -v') === undefined) return tools.Log('无Git和PM2环境，取消升级')
     const pathStatus = await this._checkPath(this._dirname)
     if (!pathStatus) return tools.Log(`未发现git仓库，无法进行自动更新`)
     else {
@@ -89,7 +99,7 @@ class AutoUpdate extends Plugin {
           message: `发现新版本 即将进行自动升级`,
           options: Options._,
         })
-        await this.execCMD('git merge')
+        await this.execCMD('git merge origin/master')
         tools.Log(`正在后台编译...`)
         await this.execCMD('npm run build')
         let pm2 = await this.execCMD('pm2 restart bilive_client')

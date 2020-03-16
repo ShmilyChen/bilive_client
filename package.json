@@ -22,30 +22,31 @@
       "path": "./node_modules/cz-conventional-changelog"
     }
   },
-  "homepage": "https://github.com/Vector000/bilive_client#readme",
+  "homepage": "https://github.com/ShmilyChen/bilive_client#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Vector000/bilive_client.git"
+    "url": "https://github.com/ShmilyChen/bilive_client.git"
   },
-  "author": "Vector000",
+  "author": "ShmilyChen",
   "license": "MIT",
   "devDependencies": {
     "@types/bootstrap": "^4.3.1",
-    "@types/jquery": "^3.3.31",
+    "@types/jquery": "^3.3.33",
     "@types/node": "^12.12.12",
-    "@types/request": "^2.48.3",
-    "@types/ws": "^6.0.3",
+    "@types/tough-cookie": "^2.3.6",
+    "@types/ws": "^7.2.2",
     "cz-conventional-changelog": "^3.0.2",
     "ts-loader": "^6.2.1",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.10",
     "buffer": "^5.4.3",
     "npm-run-posix-or-windows": "^2.0.2",
-    "typescript": "^3.7.2",
+    "typescript": "^3.8.2",
     "rimraf": "^3.0.0"
   },
   "dependencies": {
-    "request": "^2.88.0",
-    "ws": "^7.2.0"
+    "got": "^10.6.0",
+    "tough-cookie": "^3.0.1",
+    "ws": "^7.2.3"
   }
 }

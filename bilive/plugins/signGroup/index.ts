@@ -1,5 +1,5 @@
-import { Options as requestOptions } from 'request'
 import Plugin, { tools, AppClient } from '../../plugin'
+
 class SignGroup extends Plugin {
   constructor() {
     super()
@@ -46,7 +46,7 @@ class SignGroup extends Plugin {
     users.forEach(async (user, uid) => {
       if (this._signGroupList.get(uid) || !user.userData['signGroup']) return
       // 获取已加入应援团列表
-      const group: requestOptions = {
+      const group: XHRoptions = {
         uri: `https://api.live.bilibili.com/link_group/v1/member/my_groups?${AppClient.signQueryBase(user.tokenQuery)}`,
         json: true,
         headers: user.headers
@@ -58,7 +58,7 @@ class SignGroup extends Plugin {
           if (listLength === 0 || listLength === this._signGroupList.get(uid)) return
           let ok = 0
           for (const groupInfo of linkGroup.body.data.list) {
-            const sign: requestOptions = {
+            const sign: XHRoptions = {
               uri: `https://api.live.bilibili.com/link_setting/v1/link_setting/sign_in?\
                 ${AppClient.signQueryBase(`${user.tokenQuery}&group_id=${groupInfo.group_id}\
                 &owner_id=${groupInfo.owner_uid}`)}`,

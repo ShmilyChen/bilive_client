@@ -1,4 +1,3 @@
-import { Options as requestOptions } from 'request'
 import Plugin, { tools } from '../../plugin'
 import Options from '../../options'
 
@@ -80,7 +79,7 @@ class ServerChan extends Plugin {
    * @memberof ServerChan
    */
   private _send(serverChan: string, message: string) {
-    const send: requestOptions = {
+    const send: XHRoptions = {
       method: 'POST',
       uri: `https://sc.ftqq.com/${serverChan}.send`,
       body: `text=bilive_client&desp=${message}`,

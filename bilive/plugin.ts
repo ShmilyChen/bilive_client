@@ -33,5 +33,6 @@ class Plugin extends EventEmitter implements IPlugin {
    */
   public loaded = false
 }
+
 export default Plugin
 export { tools, AppClient }

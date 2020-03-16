@@ -1,6 +1,5 @@
 import Plugin, { tools } from '../../plugin'
 import Options from '../../options'
-import { Options as requestOptions } from 'request'
 
 class Manager extends Plugin {
     constructor() {
@@ -173,7 +172,7 @@ class Manager extends Plugin {
         if (!Options._.advConfig['managerSendStatus']) return
         msg.text += Options._.advConfig['managerMessage']
         msg['title'] = <string>Options._.advConfig['managerTitle']
-        const reward: requestOptions = {
+        const reward: XHRoptions = {
             method: 'POST',
             uri: `https://api.vc.bilibili.com/web_im/v1/web_im/send_msg`,
             body: `msg[sender_uid]=${this._user.biliUID}&msg[receiver_id]=${receiver.biliUID}&msg[receiver_type]=1&msg[msg_type]=10&msg[content]=${encodeURIComponent(JSON.stringify(msg))}&msg[timestamp]=${Date.now()}&msg[dev_id]=${this.dev_id}&csrf_token=${tools.getCookie(this._user.jar, 'bili_jct')}`,

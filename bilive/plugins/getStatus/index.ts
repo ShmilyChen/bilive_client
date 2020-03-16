@@ -1,4 +1,3 @@
-import { Options as requestOptions } from 'request'
 import Plugin, { tools, AppClient } from '../../plugin'
 import Options from '../../options'
 
@@ -81,7 +80,7 @@ class GetStatus extends Plugin {
   }
   /**
    * 加载封禁状态到内存
-   *  
+   *
    * @param {Map<string, User>}
    * @private
    * @memberof GetStatus
@@ -104,7 +103,7 @@ class GetStatus extends Plugin {
   }
   /**
    * 处理ban msg
-   * 
+   *
    * @param {any, User}
    * @private
    * @memberof GetStatus
@@ -136,7 +135,7 @@ class GetStatus extends Plugin {
   }
   /**
    * 处理unban(earn) msg
-   * 
+   *
    * @param {any, User}
    * @private
    * @memberof GetStatus
@@ -217,7 +216,7 @@ class GetStatus extends Plugin {
    * @memberof GetStatus
    */
   private async _getLiveInfo(user: User) {
-    const userInfo: requestOptions = {
+    const userInfo: XHRoptions = {
       uri: `https://api.live.bilibili.com/User/getUserInfo?ts=${AppClient.TS}`,
       json: true,
       jar: user.jar,
@@ -234,7 +233,7 @@ class GetStatus extends Plugin {
    * @memberof GetStatus
    */
   private async _getMedalInfo(user: User) {
-    const medalInfo: requestOptions = {
+    const medalInfo: XHRoptions = {
       uri: `https://api.live.bilibili.com/i/api/medal?page=1&pageSize=25`,
       json: true,
       jar: user.jar,
@@ -270,7 +269,7 @@ class GetStatus extends Plugin {
    * @memberof GetStatus
    */
   private async _getBagInfo(user: User) {
-    const bag: requestOptions = {
+    const bag: XHRoptions = {
       uri: `https://api.live.bilibili.com/gift/v2/gift/m_bag_list?${AppClient.signQueryBase(user.tokenQuery)}`,
       json: true,
       headers: user.headers

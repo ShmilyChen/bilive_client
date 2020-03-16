@@ -1,4 +1,3 @@
-import { Options as requestOptions } from 'request'
 import Plugin, { tools, AppClient } from '../../plugin'
 
 class MainSite extends Plugin {
@@ -48,7 +47,7 @@ class MainSite extends Plugin {
    */
   private async _getAttentionList(user: User) {
     let mids: number[] = []
-    const attentions: requestOptions = {
+    const attentions: XHRoptions = {
       uri: `https://api.bilibili.com/x/relation/followings?vmid=${user.biliUID}&ps=50&order=desc`,
       jar: user.jar,
       json: true,
@@ -70,7 +69,7 @@ class MainSite extends Plugin {
   private async _getVideoList(mids: number[]) {
     let aids: number[] = []
     for (let mid of mids) {
-      const summitVideo: requestOptions = {
+      const summitVideo: XHRoptions = {
         uri: `https://space.bilibili.com/ajax/member/getSubmitVideos?mid=${mid}&pagesize=50&tid=0`,
         json: true
       }
@@ -90,7 +89,7 @@ class MainSite extends Plugin {
    * @returns {number}
    */
   private async _getCid(aid: number) {
-    const cid: requestOptions = {
+    const cid: XHRoptions = {
       uri: `https://www.bilibili.com/widget/getPageList?aid=${aid}`,
       json: true
     }
@@ -109,7 +108,7 @@ class MainSite extends Plugin {
   private _bilibili(users: Map<string, User>) {
     users.forEach(async (user) => {
       if (!user.userData['main']) return
-      const reward: requestOptions = {
+      const reward: XHRoptions = {
         uri: `https://account.bilibili.com/home/reward`,
         jar: user.jar,
         json: true,
@@ -144,7 +143,7 @@ class MainSite extends Plugin {
    */
   private async _mainSiteWatch(user: User, aid: number, cid: number) {
     let ts = Date.now()
-    const heart: requestOptions = {
+    const heart: XHRoptions = {
       method: 'POST',
       uri: `https://api.bilibili.com/x/report/web/heartbeat`,
       body: `aid=${aid}&cid=${cid}&mid=${user.biliUID}&csrf=${tools.getCookie(user.jar, 'bili_jct')}&played_time=3&realtime=3&start_ts=${ts}&type=3&dt=2&play_type=1`,
@@ -167,7 +166,7 @@ class MainSite extends Plugin {
    */
   private async _mainSiteShare(user: User, aid: number) {
     let ts = Date.now()
-    const share: requestOptions = {
+    const share: XHRoptions = {
       method: 'POST',
       uri: `https://app.bilibili.com/x/v2/view/share/add`,
       body: AppClient.signQuery(`access_key=${user.accessToken}&aid=${aid}&appkey=${AppClient.appKey}&build=${AppClient.build}&from=7&mobi_app=android&platform=android&ts=${ts}`),
@@ -187,7 +186,7 @@ class MainSite extends Plugin {
    */
   private async _mainSiteCoin(user: User, aids: number[], coins_av: number) {
     if (coins_av === 50) return tools.Log(user.nickname, `已达到投币上限啦~`)
-    const userInfo: requestOptions = {
+    const userInfo: XHRoptions = {
       uri: `https://account.bilibili.com/home/userInfo`,
       jar: user.jar,
       json: true,
@@ -203,7 +202,7 @@ class MainSite extends Plugin {
     while (coins > 0 && coins_av < 50 && aids.length > 0) {
       let i = Math.floor(Math.random() * (aids.length))
       let aid = aids[i]
-      const addCoin: requestOptions = {
+      const addCoin: XHRoptions = {
         method: 'POST',
         uri: `https://api.bilibili.com/x/web-interface/coin/add`,
         body: `aid=${aid}&multiply=1&cross_domain=true&csrf=${tools.getCookie(user.jar, 'bili_jct')}`,
@@ -230,12 +229,12 @@ class MainSite extends Plugin {
    * 获取漫画签到信息
    *
    * @private
-   * @param user 
+   * @param user
    * @memberof _getComicInfo
    */
   private async _getComicInfo(user: User) {
     let ts = Date.now()
-    const sign: requestOptions = {
+    const sign: XHRoptions = {
       method: 'POST',
       uri: `https://manga.bilibili.com/twirp/activity.v1.Activity/GetClockInInfo`,
       body: AppClient.signQuery(`access_key=${user.accessToken}&platform=android&ts=${ts}`),
@@ -248,14 +247,14 @@ class MainSite extends Plugin {
   }
   /**
    * 漫画签到分享
-   * 
+   *
    * @private
-   * @param user 
+   * @param user
    * @memberof _mainComic
    */
   private async _mainComic(user: User) {
     let ts = Date.now()
-    const sign: requestOptions = {
+    const sign: XHRoptions = {
       method: 'POST',
       uri: `https://manga.bilibili.com/twirp/activity.v1.Activity/ClockIn`,
       body: AppClient.signQuery(`access_key=${user.accessToken}&platform=android&ts=${ts}`),
@@ -263,7 +262,7 @@ class MainSite extends Plugin {
       json: true
     }
     const signComic = await tools.XHR<comicSgin>(sign, 'Android')
-    const share: requestOptions = {
+    const share: XHRoptions = {
       method: 'POST',
       uri: `https://manga.bilibili.com/twirp/activity.v1.Activity/ShareComic`,
       body: AppClient.signQuery(`access_key=${user.accessToken}&platform=android&ts=${ts}`),
@@ -402,15 +401,15 @@ interface comicUserInfoData {
 }
 /**
  * 漫画签到
- * 
- * @interface 
+ *
+ * @interface
  */
 interface comicSgin {
   code: number
 }
 /**
  * 漫画分享
- * 
+ *
  * @interface comicShare
  */
 interface comicShare {

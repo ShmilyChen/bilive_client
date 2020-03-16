@@ -1,5 +1,6 @@
 import crypto from 'crypto'
-import request from 'request'
+import { CookieJar } from 'tough-cookie'
+import { IncomingHttpHeaders } from 'http'
 import tools from './tools'
 /**
  * 登录状态
@@ -51,12 +52,13 @@ class AppClient {
   // bilibili TV
   // private static readonly __secretKey: string = '59b43e04ad6965f34319062b478f83dd'
   // public static readonly appKey: string = '4409e2ce8ffd12b8'
-  // public static readonly build: string = '140600'
-  // public static readonly mobiApp: string = 'android_tv'
+  // public static readonly build: string = '101901'
+  // public static readonly mobiApp: string = 'android_tv_yst'
   // bilibili link
   // private static readonly __secretKey: string = 'e988e794d4d4b6dd43bc0e89d6e90c43'
   // public static readonly appKey: string = '37207f2beaebf8d7'
   // public static readonly build: string = '3900007'
+  // public static readonly mobiApp: string = 'biliLink'
   // public static readonly platform: string = 'android_link'
   /**
    * 谜一样的TS
@@ -201,21 +203,21 @@ class AppClient {
   /**
    * 请求头
    *
-   * @type {request.Headers}
+   * @type {IncomingHttpHeaders}
    * @memberof AppClient
    */
-  public headers: request.Headers = {
+  public headers: IncomingHttpHeaders = {
+    'User-Agent': 'Mozilla/5.0 BiliDroid/5.43.1 (bbcallen@gmail.com)',
     'Connection': 'Keep-Alive',
-    'User-Agent': 'Mozilla/5.0 BiliDroid/5.50.0 (bbcallen@gmail.com) os/android mobi_app/android build/5500300 innerVer/5500300'
   }
   /**
    * cookieJar
    *
    * @private
-   * @type {request.CookieJar}
+   * @type {CookieJar}
    * @memberof AppClient
    */
-  private __jar: request.CookieJar = request.jar()
+  private __jar: CookieJar = new CookieJar()
   /**
    * 对密码进行加密
    *
@@ -227,7 +229,6 @@ class AppClient {
   protected _RSAPassWord(publicKey: getKeyResponseData): string {
     const padding = {
       key: publicKey.key,
-      // @ts-ignore 此处为d.ts错误
       padding: crypto.constants.RSA_PKCS1_PADDING
     }
     const hashPassWord = publicKey.hash + this.passWord
@@ -238,11 +239,11 @@ class AppClient {
    * 获取公钥
    *
    * @protected
-   * @returns {(Promise<XHRresponse<getKeyResponse> | undefined>)}
+   * @returns {(Promise<response<getKeyResponse> | undefined>)}
    * @memberof AppClient
    */
   protected _getKey(): Promise<XHRresponse<getKeyResponse> | undefined> {
-    const getKey: request.Options = {
+    const getKey: XHRoptions = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/oauth2/getKey',
       body: AppClient.signQueryBase(),
@@ -257,14 +258,14 @@ class AppClient {
    *
    * @protected
    * @param {getKeyResponseData} publicKey
-   * @returns {Promise<XHRresponse<authResponse> | undefined>)}
+   * @returns {Promise<response<authResponse> | undefined>)}
    * @memberof AppClient
    */
   protected _auth(publicKey: getKeyResponseData): Promise<XHRresponse<authResponse> | undefined> {
     const passWord = this._RSAPassWord(publicKey)
     const captcha = this.captcha === '' ? '' : `&captcha=${this.captcha}`
     const authQuery = `username=${encodeURIComponent(this.userName)}&password=${passWord}${captcha}`
-    const auth: request.Options = {
+    const auth: XHRoptions = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/v2/oauth2/login',
       body: AppClient.signQueryBase(authQuery),
@@ -300,7 +301,7 @@ class AppClient {
    * @memberof AppClient
    */
   public async getCaptcha(): Promise<captchaResponse> {
-    const captcha: request.Options = {
+    const captcha: XHRoptions = {
       uri: 'https://passport.bilibili.com/captcha',
       encoding: null,
       jar: this.__jar,
@@ -323,8 +324,11 @@ class AppClient {
       const authResponse = await this._auth(getKeyResponse.body.data)
       if (authResponse !== undefined && authResponse.response.statusCode === 200) {
         if (authResponse.body.code === 0) {
-          this._update(authResponse.body.data)
-          return { status: appStatus.success, data: authResponse.body }
+          if (authResponse.body.data.token_info !== undefined && authResponse.body.data.cookie_info !== undefined) {
+            this._update(authResponse.body.data)
+            return { status: appStatus.success, data: authResponse.body }
+          }
+          return { status: appStatus.error, data: authResponse.body }
         }
         if (authResponse.body.code === -105) return { status: appStatus.captcha, data: authResponse.body }
         return { status: appStatus.error, data: authResponse.body }
@@ -341,7 +345,7 @@ class AppClient {
    */
   public async logout(): Promise<logoutResponse> {
     const revokeQuery = `${this.cookieString.replace(/; */g, '&')}&access_token=${this.accessToken}`
-    const revoke: request.Options = {
+    const revoke: XHRoptions = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/v2/oauth2/revoke',
       body: AppClient.signQueryBase(revokeQuery),
@@ -363,7 +367,7 @@ class AppClient {
    */
   public async refresh(): Promise<loginResponse> {
     const refreshQuery = `access_token=${this.accessToken}&refresh_token=${this.refreshToken}`
-    const refresh: request.Options = {
+    const refresh: XHRoptions = {
       method: 'POST',
       uri: 'https://passport.bilibili.com/api/v2/oauth2/refresh_token',
       body: AppClient.signQueryBase(refreshQuery),
