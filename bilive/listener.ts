@@ -71,6 +71,22 @@ class Listener extends EventEmitter {
    */
   private _beatStormID: Set<number> = new Set()
   /**
+   * 天选时刻ID
+   *
+   * @private
+   * @type {Set<number>}
+   * @memberof Listener
+   */
+  private _anchorLotID: Set<number> = new Set()
+  /**
+   * 宝箱抽奖ID
+   *
+   * @private
+   * @type {Set<number>}
+   * @memberof Listener
+   */
+  private _boxActivityID: Set<number> = new Set()
+  /**
    * 消息缓存
    *
    * @private
@@ -104,6 +120,8 @@ class Listener extends EventEmitter {
         case 'lottery':
         case 'pklottery':
         case 'beatStorm':
+        case 'anchor':
+        case 'boxActivity':
           this._RaffleHandler(message)
           break
         case 'sysmsg':
@@ -223,7 +241,7 @@ class Listener extends EventEmitter {
     if (lotteryInfo !== undefined && lotteryInfo.response.statusCode === 200
       && lotteryInfo.body.code === 0 && lotteryInfo.body.data.gift_list.length > 0) {
       lotteryInfo.body.data.gift_list.forEach(data => {
-        const message: message = {
+        const message: raffleMessage = {
           cmd: 'raffle',
           roomID,
           id: +data.raffleId,
@@ -231,7 +249,8 @@ class Listener extends EventEmitter {
           title: data.title,
           time: +data.time_wait,
           max_time: +data.max_time,
-          time_wait: +data.time_wait
+          time_wait: +data.time_wait,
+          raw:''
         }
         this._RaffleHandler(message)
       })
@@ -244,7 +263,7 @@ class Listener extends EventEmitter {
    * @param {raffleMessage | lotteryMessage | beatStormMessage} raffleMessage
    * @memberof Listener
    */
-  private _RaffleHandler(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage) {
+  private _RaffleHandler(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage | anchorLotMessage | boxActivityMessage) {
     const { cmd, id, roomID, title } = raffleMessage
     switch (cmd) {
       case 'raffle':
@@ -262,6 +281,14 @@ class Listener extends EventEmitter {
       case 'pklottery':
         if (this._pklotteryID.has(id)) return
         this._pklotteryID.add(id)
+        break
+      case 'anchor':
+        if (this._anchorLotID.has(id)) return
+        this._anchorLotID.add(id)
+        break
+      case 'boxActivity':
+        if (this._boxActivityID.has(id)) return
+        this._boxActivityID.add(id)
         break
       default: return
     }

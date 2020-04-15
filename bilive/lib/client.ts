@@ -75,10 +75,14 @@ class Client extends EventEmitter {
   public async Connect() {
     if (this._connected) return
     this._connected = true
+    const serverTest = this._server.startsWith('wss://') ? await tools.XHR({ url: this._server.replace('wss://', 'https://'), method: 'HEAD' }) : undefined
     this._wsClient = new ws(this._server, [this._protocol], {
-      rejectUnauthorized: false, headers: {
+      rejectUnauthorized: false,
+      headers: {
         'User-Agent': 'Bilive_Client 2.2.6.2260V'
-      }
+      },
+      // @ts-ignore d.ts 未更新
+      servername: serverTest === undefined ? '' : undefined
     })
     this._wsClient
       .on('error', error => this._ClientErrorHandler(error))

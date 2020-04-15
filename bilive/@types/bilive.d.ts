@@ -159,7 +159,7 @@ interface getKeyResponse {
 }
 interface getKeyResponseData {
   hash: string
-  key: string
+  key: string & authResponseTokeninfo
 }
 /**
  * 验证返回
@@ -172,6 +172,7 @@ interface authResponse {
   data: authResponseData
 }
 interface authResponseData {
+  refresh_token: undefined
   status: number
   token_info: authResponseTokeninfo
   cookie_info: authResponseCookieinfo
@@ -267,7 +268,7 @@ interface XHRoptions {
   // OutgoingHttpHeaders包含number, 导致无法兼容got
   headers?: import('http').IncomingHttpHeaders
   method?: import('got').Method
-  body?: string | Buffer
+  body?: string | Buffer | import('stream').Readable | import('form-data')
   /** @deprecated 为了兼容request, 现在可以使用cookieJar */
   jar?: import('tough-cookie').CookieJar
   cookieJar?: import('tough-cookie').CookieJar
@@ -314,6 +315,7 @@ interface raffleMessage {
   time: number
   max_time: number
   time_wait: number
+  raw: '' | TV_START | RAFFLE_START
 }
 /**
  * 消息格式
@@ -327,6 +329,7 @@ interface lotteryMessage {
   type: string
   title: string
   time: number
+  raw: '' | LOTTERY_START | PK_LOTTERY_START
 }
 /**
  * 消息格式
@@ -341,6 +344,31 @@ interface beatStormMessage {
   type: string
   title: string
   time: number
+  raw: '' | SPECIAL_GIFT
+}
+/**
+ * 消息格式
+ *
+ * @interface anchorLotMessage
+ */
+interface anchorLotMessage {
+  cmd: 'anchor'
+  roomID: number
+  id: number
+  title: string
+  raw: '' | ANCHOR_LOT_START
+}
+/**
+ * 消息格式
+ *
+ * @interface boxActivityMessage
+ */
+interface boxActivityMessage {
+  cmd: 'boxActivity'
+  roomID: number
+  id: number
+  title: string
+  raw?: '' | BOX_ACTIVITY_START
 }
 /**
  * 消息格式
@@ -351,7 +379,7 @@ interface systemMessage {
   cmd: 'sysmsg'
   msg: string
 }
-type message = raffleMessage | lotteryMessage | beatStormMessage | systemMessage
+type message = raffleMessage | lotteryMessage | beatStormMessage | anchorLotMessage | boxActivityMessage | systemMessage
 /*******************
  **** listener *****
  *******************/

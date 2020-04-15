@@ -24,6 +24,37 @@ interface ACTIVITY_BANNER_CLOSE_Data {
   id: number
   banner_type: number
 }
+interface ANCHOR_LOT_START extends danmuJson {
+  data: ANCHOR_LOT_START_Data
+}
+interface ANCHOR_LOT_START_Data {
+  asset_icon: string
+  award_image: string
+  award_name: string
+  award_num: number
+  cur_gift_num: number
+  current_time: number
+  danmu: string
+  gift_id: number
+  gift_name: string
+  gift_num: number
+  gift_price: number
+  goaway_time: number
+  id: number
+  join_type: number
+  lot_status: number
+  max_time: number
+  require_text: string
+  require_type: number
+  require_value: number
+  room_id: number
+  send_gift_ensure: number
+  show_panel: number
+  status: number
+  time: number
+  url: string
+  web_url: string
+}
 /**
  * ACTIVITY_BANNER_RED_NOTICE
  * {"cmd":"ACTIVITY_BANNER_RED_NOTICE","data":{"id":297,"type":"revenue_banner","icon":"http://i0.hdslb.com/bfs/live/0e2d597a243774241bf7b0a57ce096aa7a1f1bb1.png"},"_roomid":6154037}
@@ -107,6 +138,7 @@ interface ACTIVITY_MATCH_GIFT_Data_Detail_Home_GiftInfo {
   gift_id: number
   gift_name: string
 }
+
 /**
  * ANIMATION
  * {"cmd":"ANIMATION","data":{"animation":"https://i0.hdslb.com/bfs/live/6826d0dfa20cccedfbe6a70d6acaabaa816774a3.svga","type":"BOSS","weights":100,"uid":2352558},"_roomid":5441}
