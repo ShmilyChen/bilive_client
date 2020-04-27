@@ -1,6 +1,6 @@
 interface Window {
   Options: Options
-}
+  }
 // WebSocket消息
 interface message {
   cmd: string
@@ -25,6 +25,8 @@ interface userDataMSG extends message {
   uid: string
   data: userData
   captcha?: string
+  validate?: string
+  authcode?: string
 }
 interface utilMSG extends message {
   utilID: string

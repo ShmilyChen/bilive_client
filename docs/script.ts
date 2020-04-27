@@ -288,10 +288,14 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
   userConfigDiv.appendChild(userConfigDF)
   // 保存用户设置
   let captcha: string | undefined = undefined
+  let validate: string | undefined = undefined
+  let authcode: string | undefined = undefined
   saveUserButton.onclick = async () => {
     modal()
-    const userDataMSG = await options.setUserData(uid, userData, captcha)
+    const userDataMSG = await options.setUserData(uid, userData, captcha, validate, authcode)
     captcha = undefined
+    validate = undefined
+    authcode = undefined
     if (userDataMSG.msg == null) {
       modal({ body: '保存成功' })
       userData = userDataMSG.data
@@ -310,6 +314,25 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
         showOK: true,
         onOK: () => {
           captcha = captchaInput.value
+          saveUserButton.click()
+        }
+      })
+    }
+    else if (userDataMSG.msg === 'authcode' && userDataMSG.authcode != null) {
+      const captchaTemplate = <HTMLTemplateElement>template.querySelector('#captchaTemplate')
+      const clone = document.importNode(captchaTemplate.content, true)
+      const captchaImg = <HTMLImageElement>clone.querySelector('img')
+      const captchaInput = <HTMLInputElement>clone.querySelector('input')
+      captchaInput.remove()
+      const qr = qrcode(6, 'L')
+      qr.addData(userDataMSG.authcode)
+      qr.make()
+      captchaImg.src = qr.createDataURL(4)
+      modal({
+        body: clone,
+        showOK: true,
+        onOK: () => {
+          authcode = 'confirm'
           saveUserButton.click()
         }
       })
