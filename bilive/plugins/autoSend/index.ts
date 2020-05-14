@@ -19,7 +19,7 @@ class AutoSend extends Plugin {
             type: 'boolean'
         }
         whiteList.add('autoSend')
-        this.loaded = true
+        this.loaded = false
     }
 
     public async start({ users }: { users: Map<string, User> }) {
