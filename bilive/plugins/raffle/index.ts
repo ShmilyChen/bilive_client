@@ -268,6 +268,16 @@ class Raffle extends Plugin {
   private async _doRaffle({ message, options, users }: { message: raffleMessage | lotteryMessage, options: options, users: Map<string, User> }) {
     const delay = <number>options.advConfig['raffleDelay']
     if (delay !== 0) await tools.Sleep(delay)
+    if (message.cmd === 'lottery') {
+      const now = new Date()
+      // 在23:50之后舰队，延迟到第二天的12:00再进行抽奖
+      if (now.getHours() === 23 && now.getMinutes() > 50 && message.time >= 60 * 15) {
+        message.time -= 60 * 10
+        await tools.Sleep(60 * 10 * 1000)
+      }
+      // 舰队在有效期之内都能抽取，将领取舰队时间分布到2分钟内领取
+      await tools.Sleep(tools.random(0, 3 * 60 > message.time ? message.time : 3 * 60) * 1000)
+    }
     for (let [uid, user] of users) {
       if (user.captchaJPEG !== '' || !user.userData[message.cmd]) continue
       if (this._raffleBanList.get(uid)) continue

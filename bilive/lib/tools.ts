@@ -247,6 +247,14 @@ class Tools extends EventEmitter {
       return (data && data !== '' && key !== '') ? Tools.xorStrings(key, Buffer.from(data, 'base64').toString('utf8')) : data
     }
   }
+  /**
+   * 生成指定范围内的随机数
+   * @param lower 最小范围
+   * @param upper 最大范围
+   */
+  public random(lower: number = 0, upper: number = 10) {
+    return Math.floor(Math.random() * (upper - lower + 1)) + lower
+  }
 }
 
 export default new Tools()
