@@ -13,19 +13,20 @@ class Options extends EventEmitter {
   constructor() {
     super()
     // 根据npm start参数不同设置不同路径
-    this._dirname = __dirname + (process.env.script === 'build/app.js' || process.env.npm_package_scripts_start === 'node build/app.js' ? '/../../' : '/../')
+    // this._dirname = __dirname + (process.env.script === 'build/app.js' || process.env.npm_package_scripts_start === 'node build/app.js' ? '/../..' : '/..')
+    this._dirname = process.cwd()
     // 检查是否有options目录
-    const hasDir = fs.existsSync(this._dirname + 'options/')
-    if (!hasDir) fs.mkdirSync(this._dirname + 'options/')
+    const hasDir = fs.existsSync(this._dirname + '/options/')
+    if (!hasDir) fs.mkdirSync(this._dirname + '/options/')
     // 读取默认设置文件
-    const defaultOptionBuffer = fs.readFileSync(this._dirname + 'bilive/options.default.json')
+    const defaultOptionBuffer = fs.readFileSync(this._dirname + '/bilive/options.default.json')
     this._ = <options>JSON.parse(defaultOptionBuffer.toString())
     this._.util = {}
     // 复制默认设置文件到用户设置文件
-    const hasFile = fs.existsSync(this._dirname + 'options/options.json')
-    if (!hasFile) fs.copyFileSync(this._dirname + 'bilive/options.default.json', this._dirname + 'options/options.json')
+    const hasFile = fs.existsSync(this._dirname + '/options/options.json')
+    if (!hasFile) fs.copyFileSync(this._dirname + '/bilive/options.default.json', this._dirname + '/options/options.json')
     // 读取用户设置文件
-    const userOptionBuffer = fs.readFileSync(this._dirname + 'options/options.json')
+    const userOptionBuffer = fs.readFileSync(this._dirname + '/options/options.json')
     this._userOption = this._
     if (this.isValidJSON(userOptionBuffer.toString())) {
       this._userOption = <options>JSON.parse(userOptionBuffer.toString())
@@ -156,7 +157,6 @@ class Options extends EventEmitter {
    * @memberof Options
    */
   public async save() {
-    // const blacklist = ['newUserData', 'info', 'apiIPs', 'roomList']
     const error = await FSwriteFile(this._dirname + '/options/options.json'
       , JSON.stringify(this._, (key, value) => (key.match(/^\d*$/) !== null || this.whiteList.has(key)) ? value : undefined, 2))
     if (error !== undefined) console.error(`${new Date().toString().slice(4, 24)} :`, error)
@@ -168,7 +168,7 @@ class Options extends EventEmitter {
    * @memberof Options
    */
   public async backup() {
-    fs.copyFileSync(this._dirname + 'options/options.json', this._dirname + 'options/options.bak')
+    fs.copyFileSync(this._dirname + '/options/options.json', this._dirname + '/options/options.bak')
     tools.Log('成功备份options.json')
   }
   /**
@@ -178,9 +178,9 @@ class Options extends EventEmitter {
    */
   public async restore() {
     tools.Log('options.json似乎已损坏，将尝试进行还原...')
-    if (fs.existsSync(this._dirname + 'options/options.bak')) {
-      const backupString = fs.readFileSync(this._dirname + 'options/options.bak').toString()
-      fs.copyFileSync(this._dirname + 'options/options.bak', this._dirname + 'options/options.json')
+    if (fs.existsSync(this._dirname + '/options/options.bak')) {
+      const backupString = fs.readFileSync(this._dirname + '/options/options.bak').toString()
+      fs.copyFileSync(this._dirname + '/options/options.bak', this._dirname + '/options/options.json')
       this._userOption = <options>JSON.parse(backupString)
       this.init()
       tools.Log('已成功恢复options.json')
