@@ -36,8 +36,8 @@ class SendGift extends Plugin {
     // 自动送礼房间
     defaultOptions.newUserData['sendGiftRoom'] = 0
     defaultOptions.info['sendGiftRoom'] = {
-      description: '自动送礼uid',
-      tip: '要自动送出礼物的主播uid,多个请用英文逗号分割',
+      description: '自动送礼房间',
+      tip: '要自动送出礼物的房间号',
       type: 'number'
     }
     whiteList.add('sendGiftRoom')
@@ -48,7 +48,7 @@ class SendGift extends Plugin {
   }
   public async loop({ cstMin, cstHour, cstString, users }: { cstMin: number, cstHour: number, cstString: string, users: Map<string, User> }) {
     // 每天04:30, 12:30, 13:55, 20:30, 23:55自动送礼
-    if (cstMin === 30 && cstHour % 8 === 4 || cstString === '13:55' || cstString === '23:55' || cstString === '23:59') this._sendGift(users)
+    if (cstMin === 30 && cstHour % 8 === 4 || cstString === '13:55' || cstString === '23:55') this._sendGift(users)
   }
   /**
    * 自动送礼
