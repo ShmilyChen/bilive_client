@@ -246,15 +246,17 @@ class Raffle extends Plugin {
     const raffleID = message.id
     if (message.cmd === 'beatStorm') this._doStorm({ message, options, users })
     else {
-      if (Date.now() - this.raffleTime < 400) {
+      // 据说一秒发12包会被gank，所以根据用户数量动态设定延迟
+      const time = message.cmd === 'lottery' ? 1000 * Math.floor(users.size / 10) : 400
+      if (Date.now() - this.raffleTime < time) {
         this.raffleTime = Date.now()
         this.raffleSet.add(raffleID)
-        await tools.Sleep(400 * this.raffleSet.size)
+        await tools.Sleep(time * this.raffleSet.size)
         this._doRaffle({ message, options, users })
       }
       else {
         this.raffleTime = Date.now()
-        this.raffleSet.clear()
+        // this.raffleSet.clear()
         this._doRaffle({ message, options, users })
       }
     }
@@ -276,7 +278,9 @@ class Raffle extends Plugin {
         await tools.Sleep(60 * 10 * 1000)
       }
       // 舰队在有效期之内都能抽取，将领取舰队时间分散到3分钟内领取
-      await tools.Sleep(tools.random(0, 3 * 60 > message.time ? message.time : 3 * 60) * 1000)
+      if (this.raffleSet.size > 200) {
+        await tools.Sleep(tools.random(0, 3 * 60 > message.time ? message.time : 3 * 60) * 1000)
+      }
     }
     for (let [uid, user] of users) {
       if (user.captchaJPEG !== '' || !user.userData[message.cmd]) continue
