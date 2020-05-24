@@ -250,7 +250,8 @@ class Listener extends EventEmitter {
           time: +data.time_wait,
           max_time: +data.max_time,
           time_wait: +data.time_wait,
-          raw:''
+          raw: '',
+          timeout: Date.now() + data.time_wait * 1000
         }
         this._RaffleHandler(message)
       })

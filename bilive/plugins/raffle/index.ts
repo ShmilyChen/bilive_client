@@ -160,6 +160,9 @@ class Raffle extends Plugin {
       type: 'string'
     }
     whiteList.add('beatStormAPI')
+
+    this._lotteryTimer = setInterval(() => this._Lottery(), this.lotteryShiftTime)
+
     this.loaded = true
   }
   /**
@@ -227,6 +230,23 @@ class Raffle extends Plugin {
       this._stormBanList.clear()
     }
     if (cstString === '00:00') this._refreshCount(users)
+    //当队列长度大于等于50的时候将频率改成500ms一次
+    const time = (this._lotteryQueue.lottery.length + this._lotteryQueue.pklottery.length >= 50 ? 500 : 200) * users.size
+    if (this.lotteryShiftTime !== time && !this.lottery) {
+      clearInterval(this._lotteryTimer)
+      this.lotteryShiftTime = time
+      this._lotteryTimer = setInterval(() => this._Lottery(), this.lotteryShiftTime)
+    }
+    if (cstHour === 23 && cstMin > 50) {
+      clearInterval(this._lotteryTimer)
+      this.lottery = false
+    } else {
+      if (!this.lottery) {
+        this.lottery = true
+        clearInterval(this._lotteryTimer)
+        this._lotteryTimer = setInterval(() => this._Lottery(), this.lotteryShiftTime)
+      }
+    }
     // 当天数据写入JSON
     users.forEach(async (user, uid) => user.userData['beatStormTaken'] = this._stormEarn[uid])
     options.advConfig['beatStormRefresh'] = Date.now()
@@ -238,6 +258,29 @@ class Raffle extends Plugin {
   // 抽奖缓存，应对大量抽奖
   private raffleSet: Set<number> = new Set()
   private raffleTime: number = Date.now()
+
+  // private _lotteryQueue: Array<{ message: lotteryMessage, options: options, users: Map<string, User> }> = new Array()
+  private _lotteryQueue = {
+    lottery: new Array<{ message: lotteryMessage, options: options, users: Map<string, User> }>(),
+    pklottery: new Array<{ message: lotteryMessage, options: options, users: Map<string, User> }>()
+  }
+
+  private lotteryShiftTime: number = 2000
+
+  private lottery: boolean = false
+
+  private _lotteryTimer!: NodeJS.Timeout
+
+  private _Lottery() {
+    const queue = this._lotteryQueue.pklottery.length > 0 ? this._lotteryQueue.pklottery.shift() : this._lotteryQueue.lottery.shift()
+    if (queue !== undefined) {
+      // if (queue.message.timeout - Date.now() <= 3000) {
+      //   this._Lottery()
+      // } else {
+      this._doRaffle(queue)
+      // }
+    }
+  }
   /**
    * 抽奖缓冲，应对大量抽奖
    * 
@@ -246,19 +289,40 @@ class Raffle extends Plugin {
     const raffleID = message.id
     if (message.cmd === 'beatStorm') this._doStorm({ message, options, users })
     else {
+      if (message.timeout === undefined) {
+        message['timeout'] = Date.now() + message.time * 1000
+      }
+      // 将舰队放入队列进行抽取
+      if (message.cmd === 'lottery' || message.cmd === 'pklottery') {
+        this._lotteryQueue[message.cmd].push({ message, options, users })
+        console.log('队列长度', this._lotteryQueue.lottery.length + this._lotteryQueue.pklottery.length)
+      } else if (message.cmd === 'raffle') {
+        message['timeout'] = Date.now() + message.time_wait * 1000
+        if (Date.now() - this.raffleTime < 400) {
+          this.raffleTime = Date.now()
+          this.raffleSet.add(raffleID)
+          await tools.Sleep(400 * this.raffleSet.size)
+          this._doRaffle({ message, options, users })
+        }
+        else {
+          this.raffleTime = Date.now()
+          this.raffleSet.clear()
+          this._doRaffle({ message, options, users })
+        }
+      }
       // 据说一秒发12包会被gank，所以根据用户数量动态设定延迟
-      const time = message.cmd === 'lottery' ? 1000 * Math.floor(users.size / 10) : 400
-      if (Date.now() - this.raffleTime < time) {
-        this.raffleTime = Date.now()
-        this.raffleSet.add(raffleID)
-        await tools.Sleep(time * this.raffleSet.size)
-        this._doRaffle({ message, options, users })
-      }
-      else {
-        this.raffleTime = Date.now()
-        // this.raffleSet.clear()
-        this._doRaffle({ message, options, users })
-      }
+      // const time = message.cmd === 'lottery' ? 1000 * Math.floor(users.size / 15) : 400
+      // if (Date.now() - this.raffleTime < time) {
+      //   this.raffleTime = Date.now()
+      //   this.raffleSet.add(raffleID)
+      //   await tools.Sleep(time * this.raffleSet.size)
+      //   this._doRaffle({ message, options, users })
+      // }
+      // else {
+      //   this.raffleTime = Date.now()
+      //   // this.raffleSet.clear()
+      //   this._doRaffle({ message, options, users })
+      // }
     }
   }
   /**
@@ -269,19 +333,8 @@ class Raffle extends Plugin {
    */
   private async _doRaffle({ message, options, users }: { message: raffleMessage | lotteryMessage, options: options, users: Map<string, User> }) {
     const delay = <number>options.advConfig['raffleDelay']
+    if ((message.timeout - (Date.now() + delay)) <= 3000) return tools.Log(message.title, message.id, '抽奖已结束取消抽奖')
     if (delay !== 0) await tools.Sleep(delay)
-    if (message.cmd === 'lottery') {
-      const now = new Date(Date.now() + 8 * 60 * 60 * 1000)
-      // 在23:50之后舰队，延迟到第二天的12:00再进行抽奖
-      if (now.getUTCHours() === 23 && now.getUTCMinutes() > 50 && message.time >= 60 * 15) {
-        message.time -= 60 * 10
-        await tools.Sleep(60 * 10 * 1000)
-      }
-      // 舰队在有效期之内都能抽取，将领取舰队时间分散到3分钟内领取
-      if (this.raffleSet.size > 200) {
-        await tools.Sleep(tools.random(0, 3 * 60 > message.time ? message.time : 3 * 60) * 1000)
-      }
-    }
     for (let [uid, user] of users) {
       if (user.captchaJPEG !== '' || !user.userData[message.cmd]) continue
       if (this._raffleBanList.get(uid)) continue
@@ -300,7 +353,7 @@ class Raffle extends Plugin {
           .Start()
         this.raffleSet.delete(message.id)
       }
-      await tools.Sleep(500)
+      await tools.Sleep(200)
     }
   }
   /**

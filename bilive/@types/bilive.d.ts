@@ -351,6 +351,7 @@ interface raffleMessage {
   max_time: number
   time_wait: number
   raw: '' | TV_START | RAFFLE_START
+  timeout: number
 }
 /**
  * 消息格式
@@ -365,6 +366,7 @@ interface lotteryMessage {
   title: string
   time: number
   raw: '' | LOTTERY_START | PK_LOTTERY_START
+  timeout: number
 }
 /**
  * 消息格式

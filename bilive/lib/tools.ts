@@ -83,16 +83,29 @@ class Tools extends EventEmitter {
       options.responseType = 'json'
       delete options.json
     }
+    // @ts-ignore 判断是否被风控
+    if (this.ban[options.url] !== undefined && !this.ban[options.url]) return
     // 添加头信息
     const headers = this.getHeaders(platform)
     options.headers = options.headers === undefined ? headers : Object.assign(headers, options.headers)
     if (options.method?.toLocaleUpperCase() === 'POST' && options.headers['Content-Type'] === undefined)
       options.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
     // @ts-ignore got把参数分的太细了, 导致responseType没法确定
-    const gotResponse = await got<T>(options).catch(error => this.ErrorLog(options.url, error))
+    const gotResponse = await got<T>(options).catch(error => {
+      this.ErrorLog(options.url, error.response.body)
+      if (error.response.statusCode === 412) {
+        // @ts-ignore
+        this.ban[options.url] = true
+        this.Log('接口风控', options.url)
+        // @ts-ignore
+        setTimeout(() => this.ban[options.url] = false, 5 * 60 * 1000)
+        this.Log(this.ban)
+      }
+    })
     if (gotResponse === undefined) return
     else return { response: gotResponse, body: gotResponse.body }
   }
+  private ban = {}
   /**
    * 获取cookie值
    *
