@@ -231,7 +231,7 @@ class Raffle extends Plugin {
     }
     if (cstString === '00:00') this._refreshCount(users)
     //当队列长度大于等于50的时候将频率改成500ms一次
-    const time = (this._lotteryQueue.lottery.length + this._lotteryQueue.pklottery.length >= 50 ? 500 : 200) * users.size
+    const time = (this._lotteryQueue.lottery.length + this._lotteryQueue.pklottery.length >= 50 ? 1000 : 300) * users.size
     if (this.lotteryShiftTime !== time && !this.lottery) {
       clearInterval(this._lotteryTimer)
       this.lotteryShiftTime = time
@@ -274,11 +274,11 @@ class Raffle extends Plugin {
   private _Lottery() {
     const queue = this._lotteryQueue.pklottery.length > 0 ? this._lotteryQueue.pklottery.shift() : this._lotteryQueue.lottery.shift()
     if (queue !== undefined) {
-      // if (queue.message.timeout - Date.now() <= 3000) {
-      //   this._Lottery()
-      // } else {
-      this._doRaffle(queue)
-      // }
+      if (queue.message.timeout - Date.now() <= 3000) {
+        this._Lottery()
+      } else {
+        this._doRaffle(queue)
+      }
     }
   }
   /**
