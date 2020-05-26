@@ -231,13 +231,13 @@ class Raffle extends Plugin {
     }
     if (cstString === '00:00') this._refreshCount(users)
     //当队列长度大于等于50的时候将频率改成500ms一次
-    const time = (this._lotteryQueue.lottery.length + this._lotteryQueue.pklottery.length >= 50 ? 1000 : 300) * users.size
+    const time = (this._lotteryQueue.lottery.length + this._lotteryQueue.pklottery.length >= 50 ? 700 : 300) * users.size
     if (this.lotteryShiftTime !== time && !this.lottery) {
       clearInterval(this._lotteryTimer)
       this.lotteryShiftTime = time
       this._lotteryTimer = setInterval(() => this._Lottery(), this.lotteryShiftTime)
     }
-    if (cstHour === 23 && cstMin > 50) {
+    if (cstHour === 23 && cstMin > 52) {
       clearInterval(this._lotteryTimer)
       this.lottery = false
     } else {
@@ -295,8 +295,8 @@ class Raffle extends Plugin {
       // 将舰队放入队列进行抽取
       if (message.cmd === 'lottery' || message.cmd === 'pklottery') {
         this._lotteryQueue[message.cmd].push({ message, options, users })
-        console.log('队列长度', this._lotteryQueue.lottery.length + this._lotteryQueue.pklottery.length)
-      } else if (message.cmd === 'raffle') {
+        console.log('总队列长度', this._lotteryQueue.lottery.length + this._lotteryQueue.pklottery.length)
+        } else if (message.cmd === 'raffle') {
         message['timeout'] = Date.now() + message.time_wait * 1000
         if (Date.now() - this.raffleTime < 400) {
           this.raffleTime = Date.now()
