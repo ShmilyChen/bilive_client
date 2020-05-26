@@ -84,7 +84,7 @@ class Tools extends EventEmitter {
       delete options.json
     }
     // @ts-ignore 判断是否被风控
-    if (this.ban[options.url] !== undefined && this.ban[options.url]) return
+    if (this.ban[options.url]) return
     // 添加头信息
     const headers = this.getHeaders(platform)
     options.headers = options.headers === undefined ? headers : Object.assign(headers, options.headers)
