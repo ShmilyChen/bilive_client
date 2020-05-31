@@ -1,5 +1,6 @@
 import Plugin, { tools } from '../../plugin'
 import Options from '../../options'
+import AppClient from '../../lib/app_client'
 
 class Manager extends Plugin {
     constructor() {
@@ -75,7 +76,6 @@ class Manager extends Plugin {
         this.loaded = true
     }
     private _user!: User
-    private dev_id: string = this.getGUID()
     public async start({ options, users }: { options: options, users: Map<string, User> }) {
         await this.loadUserList(options, users)
         const user = users.get(<string>options.advConfig['managerKEY'])
@@ -96,6 +96,7 @@ class Manager extends Plugin {
                 options: Options._
             })
         }
+        this.checkTime(users)
     }
     private msg?: utilMSG
     public async interact({ msg }: { msg: utilMSG }) {
@@ -144,14 +145,13 @@ class Manager extends Plugin {
     private checkTime(users: Map<string, User>) {
         const time: number = Date.now()
         users.forEach(async (user) => {
-            if (!user.userData['managerStatus']) return
-            if (!user.userData.status) return
+            if (!(user.userData['managerStatus'] && user.userData.status)) return
             const endTime: number = new Date(<string>user.userData['managerEndTime']).getTime()
             if (endTime <= time) {
                 user.Stop()
                 tools.Log(`用户${user.nickname}已到期，已自动停止挂机`)
                 const msg: msgContent = {
-                    text: `您的辣条黑科技已到期\n已自动停止操作\n`,
+                    text: `您的辣条黑科技已到期\\n已自动停止操作\\n`,
                     jump_text: '',
                     jump_uri: ''
                 }
@@ -159,7 +159,7 @@ class Manager extends Plugin {
             } else if (endTime - time <= 7 * 24 * 60 * 60 * 1000 && endTime - time >= 6 * 24 * 60 * 60 * 1000) {
                 tools.Log(`用户${user.nickname}还有${this.getTimeDifference(endTime)}到期，请注意续费`)
                 const msg: msgContent = {
-                    text: `您的辣条黑科技将于${this.getTimeDifference(endTime, time)}后到期\n到期时间：${user.userData['managerEndTime']}\n请注意续费哦(｀・ω・´)\n`,
+                    text: `您的辣条黑科技将于${this.getTimeDifference(endTime, time)}后到期\\n到期时间：${user.userData['managerEndTime']}\\n请注意续费哦(｀・ω・´)\\n`,
                     jump_text: '',
                     jump_uri: ''
                 }
@@ -175,7 +175,8 @@ class Manager extends Plugin {
         const reward: XHRoptions = {
             method: 'POST',
             uri: `https://api.vc.bilibili.com/web_im/v1/web_im/send_msg`,
-            body: `msg[sender_uid]=${this._user.biliUID}&msg[receiver_id]=${receiver.biliUID}&msg[receiver_type]=1&msg[msg_type]=10&msg[content]=${encodeURIComponent(JSON.stringify(msg))}&msg[timestamp]=${Date.now()}&msg[dev_id]=${this.dev_id}&csrf_token=${tools.getCookie(this._user.jar, 'bili_jct')}`,
+            // body: `msg[sender_uid]=${this._user.biliUID}&msg[receiver_id]=${receiver.biliUID}&msg[receiver_type]=1&msg[msg_type]=10&msg[content]=${encodeURIComponent(JSON.stringify(msg))}&msg[timestamp]=${Date.now()}&msg[dev_id]=${this.dev_id}&csrf_token=${tools.getCookie(this._user.jar, 'bili_jct')}`,
+            body: `msg[sender_uid]=${this._user.biliUID}&msg[receiver_id]=${receiver.biliUID}&msg[receiver_type]=1&msg[msg_type]=1&msg[content]={"content":"${msg.title}\\n${msg.text}"}&msg[timestamp]=${Date.now()}&msg[dev_id]=${AppClient.deviceId}&csrf_token=${tools.getCookie(this._user.jar, 'bili_jct')}`,
             jar: this._user.jar,
             json: true,
             headers: this._user.headers
@@ -195,16 +196,6 @@ class Manager extends Plugin {
         // 两个时间戳相差的毫秒数
         const usedTime = etime - stime
         return `${Math.floor(usedTime / (24 * 3600 * 1000))}天`
-    }
-    private getGUID() {
-        let guid = '';
-        for (var i = 1; i <= 32; i++) {
-            var n = Math.floor(Math.random() * 16.0).toString(16);
-            guid += n;
-            if ((i == 8) || (i == 12) || (i == 16) || (i == 20))
-                guid += '-'
-        }
-        return guid.toUpperCase()
     }
 }
 interface msgResponse {
