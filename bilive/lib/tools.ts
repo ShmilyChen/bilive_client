@@ -28,7 +28,7 @@ class Tools extends EventEmitter {
         return {
           'Connection': 'Keep-Alive',
           'env': 'prod',
-          'User-Agent': 'Mozilla/5.0 BiliDroid/5.57.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/5570300 channel/bili innerVer/5570300 osVer/10 network/2'
+          'User-Agent': 'Mozilla/5.0 BiliDroid/6.0.0 (bbcallen@gmail.com) os/android model/xiaomi 6 mobi_app/android build/6000200 channel/master innerVer/6000200 osVer/5.1.1 network/2'
         }
       case 'WebView':
         return {

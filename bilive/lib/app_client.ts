@@ -29,7 +29,8 @@ abstract class AppClient {
   protected static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
   public static readonly appKey: string = '1d8b6e7d45233436'
   public static get biliLocalId(): string { return this.RandomID(64) }
-  public static readonly build: string = '5570300'
+  public static readonly build: string = '6000200'
+  public static readonly appBuild: string = '6.0.0'
   public static get buvid(): string { return this.RandomID(37).toLocaleUpperCase() }
   public static readonly channel: string = 'bili'
   public static readonly device: string = 'phone'
@@ -41,7 +42,7 @@ abstract class AppClient {
   public static get localId(): string { return this.buvid }
   public static readonly mobiApp: string = 'android'
   public static readonly platform: string = 'android'
-  public static readonly statistics: string = '%7B%22appId%22%3A1%2C%22platform%22%3A3%2C%22version%22%3A%225.57.0%22%2C%22abtest%22%3A%22%22%7D'
+  public static readonly statistics: string = `%7B%22appId%22%3A1%2C%22platform%22%3A3%2C%22version%22%3A%22${AppClient.appBuild}%22%2C%22abtest%22%3A%22%22%7D`
 
   // bilibili 国际版
   // protected static readonly __loginSecretKey: string = 'c75875c596a69eb55bd119e74b07cfe3'
@@ -148,7 +149,8 @@ abstract class AppClient {
    */
   public static get headers(): IncomingHttpHeaders {
     return {
-      'User-Agent': 'Mozilla/5.0 BiliDroid/5.57.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/5570300 channel/bili innerVer/5570300 osVer/10 network/2',
+      //'User-Agent': `Mozilla/5.0 BiliDroid/${this.appBuild} (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/${this.build} channel/bili innerVer/${this.build} osVer/5.1.1 network/2`,
+      'User-Agent': `Mozilla/5.0 BiliDroid/${this.appBuild} (bbcallen@gmail.com) os/android model/xiaomi 6 mobi_app/android build/${this.build} channel/master innerVer/${this.build} osVer/5.1.1 network/2`,
       'APP-KEY': this.mobiApp,
       'Buvid': this.buvid,
       'Device-ID': this.deviceId,
@@ -243,6 +245,7 @@ abstract class AppClient {
   public appKey: string = AppClient.appKey
   public biliLocalId = AppClient.biliLocalId
   public build: string = AppClient.build
+  public appBuild: string = AppClient.appBuild
   public buvid = AppClient.buvid
   public channel: string = AppClient.channel
   public device: string = AppClient.device
@@ -260,7 +263,8 @@ abstract class AppClient {
    * @memberof AppClient
    */
   public headers: IncomingHttpHeaders = {
-    'User-Agent': 'Mozilla/5.0 BiliDroid/5.57.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/5570300 channel/bili innerVer/5570300 osVer/10 network/2',
+    //'User-Agent': 'Mozilla/5.0 BiliDroid/5.57.0 (bbcallen@gmail.com) os/android model/J9110 mobi_app/android build/${this.build} channel/bili innerVer/${this.build} osVer/10 network/2',
+    'User-Agent': `Mozilla/5.0 BiliDroid/${this.appBuild} (bbcallen@gmail.com) os/android model/xiaomi 6 mobi_app/android build/${this.build} channel/master innerVer/${this.build} osVer/5.1.1 network/2`,
     'APP-KEY': this.mobiApp,
     'Buvid': this.buvid,
     'Device-ID': this.deviceId,
