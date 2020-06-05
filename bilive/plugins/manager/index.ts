@@ -96,7 +96,6 @@ class Manager extends Plugin {
                 options: Options._
             })
         }
-        this.checkTime(users)
     }
     private msg?: utilMSG
     public async interact({ msg }: { msg: utilMSG }) {

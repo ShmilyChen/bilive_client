@@ -231,8 +231,8 @@ class Raffle extends Plugin {
     }
     if (cstString === '00:00') this._refreshCount(users)
     //等待时间随着队列长度变化而变化
-    const size = this._lotteryQueue.lottery.length + this._lotteryQueue.pklottery.length
-    let time = (400 + (Math.floor(size / 100) * 100)) * users.size
+    const size = this._lotteryQueue.length
+    let time = (400 + (Math.floor(size / 100) * 150)) * users.size
     if (this.lotteryShiftTime !== time && !this.lottery) {
       clearInterval(this._lotteryTimer)
       this.lotteryShiftTime = time
@@ -260,11 +260,11 @@ class Raffle extends Plugin {
   private raffleSet: Set<number> = new Set()
   private raffleTime: number = Date.now()
 
-  // private _lotteryQueue: Array<{ message: lotteryMessage, options: options, users: Map<string, User> }> = new Array()
-  private _lotteryQueue = {
-    lottery: new Array<{ message: lotteryMessage, options: options, users: Map<string, User> }>(),
-    pklottery: new Array<{ message: lotteryMessage, options: options, users: Map<string, User> }>()
-  }
+  private _lotteryQueue: Array<{ message: lotteryMessage, options: options, users: Map<string, User> }> = new Array()
+  // private _lotteryQueue = {
+  //   lottery: new Array<{ message: lotteryMessage, options: options, users: Map<string, User> }>(),
+  //   pklottery: new Array<{ message: lotteryMessage, options: options, users: Map<string, User> }>()
+  // }
 
   private lotteryShiftTime: number = 2000
 
@@ -273,10 +273,15 @@ class Raffle extends Plugin {
   private _lotteryTimer!: NodeJS.Timeout
 
   private _Lottery() {
-    const queue = this._lotteryQueue.pklottery.length > 0 ? this._lotteryQueue.pklottery.shift() : this._lotteryQueue.lottery.shift()
+    // this._lotteryQueue.lottery = this._lotteryQueue.lottery.filter((item) => item.message.timeout - Date.now() >= 2000).sort((a, b) => a.message.timeout - b.message.timeout)
+    // this._lotteryQueue.pklottery = this._lotteryQueue.pklottery.filter((item) => item.message.timeout - Date.now() >= 2000).sort((a, b) => a.message.timeout - b.message.timeout)
+    this._lotteryQueue = this._lotteryQueue.filter((item) => item.message.timeout - Date.now() >= 2000).sort((a, b) => a.message.timeout - b.message.timeout)
+    // const queue = this._lotteryQueue.pklottery.length > 0 ? this._lotteryQueue.pklottery.shift() : this._lotteryQueue.lottery.shift()
+    const queue = this._lotteryQueue.shift()
     if (queue !== undefined) {
-      if (queue.message.timeout - Date.now() <= 3000) {
-        this._Lottery()
+      // @ts-ignore
+      if (tools.ban[`${Options._.advConfig[`${queue.message.cmd}API`]}/join`]) {
+        this._lotteryQueue.push(queue)
       } else {
         this._doRaffle(queue)
       }
@@ -295,14 +300,16 @@ class Raffle extends Plugin {
       }
       // 将舰队放入队列进行抽取
       if (message.cmd === 'lottery' || message.cmd === 'pklottery') {
-        this._lotteryQueue[message.cmd].push({ message, options, users })
-        console.log('总队列长度', this._lotteryQueue.lottery.length + this._lotteryQueue.pklottery.length)
+        // this._lotteryQueue[message.cmd].push({ message, options, users })
+        this._lotteryQueue.push({ message, options, users })
+        console.log('总队列长度', this._lotteryQueue.length)
       } else if (message.cmd === 'raffle') {
         message['timeout'] = Date.now() + message.time_wait * 1000
-        if (Date.now() - this.raffleTime < 400) {
+        const time = 100 * users.size > 400 ? 400 : 100 * users.size
+        if (Date.now() - this.raffleTime < time) {
           this.raffleTime = Date.now()
           this.raffleSet.add(raffleID)
-          await tools.Sleep(400 * this.raffleSet.size)
+          await tools.Sleep(time * this.raffleSet.size)
           this._doRaffle({ message, options, users })
         }
         else {
