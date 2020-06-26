@@ -212,6 +212,7 @@ class Raffle extends Plugin {
     return priority
   }
   public async start({ options, users }: { options: options, users: Map<string, User> }) {
+    this.users = users
     this._refreshCount(users)
     this._loadCount(options, users)
   }
@@ -232,7 +233,7 @@ class Raffle extends Plugin {
     if (cstString === '00:00') this._refreshCount(users)
     //等待时间随着队列长度变化而变化
     const size = this._lotteryQueue.length
-    let time = (400 + (Math.floor(size / 100) * 150)) * users.size
+    let time = (100 + (Math.floor(size / 50) * 75)) * users.size
     if (this.lotteryShiftTime !== time && !this.lottery) {
       clearInterval(this._lotteryTimer)
       this.lotteryShiftTime = time
@@ -253,30 +254,41 @@ class Raffle extends Plugin {
     options.advConfig['beatStormRefresh'] = Date.now()
     Options.save()
   }
+  private users: Map<string, User> = new Map()
   public async msg({ message, options, users }: { message: raffleMessage | lotteryMessage | beatStormMessage, options: options, users: Map<string, User> }) {
+    this.users = users
     if (this._raffle) await this._preRaffle({ message, options, users })
   }
   // 抽奖缓存，应对大量抽奖
   private raffleSet: Set<number> = new Set()
   private raffleTime: number = Date.now()
 
+  /**
+   * 舰队和pk抽奖队列
+   */
   private _lotteryQueue: Array<{ message: lotteryMessage, options: options, users: Map<string, User> }> = new Array()
-  // private _lotteryQueue = {
-  //   lottery: new Array<{ message: lotteryMessage, options: options, users: Map<string, User> }>(),
-  //   pklottery: new Array<{ message: lotteryMessage, options: options, users: Map<string, User> }>()
-  // }
 
+  /**
+   * 出_lotteryQueue队列时间间隔
+   */
   private lotteryShiftTime: number = 2000
 
+  /**
+   * lottery抽奖是否暂停
+   */
   private lottery: boolean = false
 
+  /**
+   * 队列定时器
+   */
   private _lotteryTimer!: NodeJS.Timeout
 
+  /**
+   * 队列控制器
+   */
   private _Lottery() {
-    // this._lotteryQueue.lottery = this._lotteryQueue.lottery.filter((item) => item.message.timeout - Date.now() >= 2000).sort((a, b) => a.message.timeout - b.message.timeout)
-    // this._lotteryQueue.pklottery = this._lotteryQueue.pklottery.filter((item) => item.message.timeout - Date.now() >= 2000).sort((a, b) => a.message.timeout - b.message.timeout)
-    this._lotteryQueue = this._lotteryQueue.filter((item) => item.message.timeout - Date.now() >= 2000).sort((a, b) => a.message.timeout - b.message.timeout)
-    // const queue = this._lotteryQueue.pklottery.length > 0 ? this._lotteryQueue.pklottery.shift() : this._lotteryQueue.lottery.shift()
+    if (this._lotteryQueue.length === 0) return
+    this._lotteryQueue = this._lotteryQueue.filter((item) => item.message.timeout - Date.now() >= 3000).sort((a, b) => a.message.timeout - b.message.timeout)
     const queue = this._lotteryQueue.shift()
     if (queue !== undefined) {
       // @ts-ignore
@@ -318,19 +330,6 @@ class Raffle extends Plugin {
           this._doRaffle({ message, options, users })
         }
       }
-      // 据说一秒发12包会被gank，所以根据用户数量动态设定延迟
-      // const time = message.cmd === 'lottery' ? 1000 * Math.floor(users.size / 15) : 400
-      // if (Date.now() - this.raffleTime < time) {
-      //   this.raffleTime = Date.now()
-      //   this.raffleSet.add(raffleID)
-      //   await tools.Sleep(time * this.raffleSet.size)
-      //   this._doRaffle({ message, options, users })
-      // }
-      // else {
-      //   this.raffleTime = Date.now()
-      //   // this.raffleSet.clear()
-      //   this._doRaffle({ message, options, users })
-      // }
     }
   }
   /**
@@ -341,8 +340,13 @@ class Raffle extends Plugin {
    */
   private async _doRaffle({ message, options, users }: { message: raffleMessage | lotteryMessage, options: options, users: Map<string, User> }) {
     const delay = <number>options.advConfig['raffleDelay']
-    if ((message.timeout - (Date.now() + delay)) <= 3000) return tools.Log(message.title, message.id, '抽奖已结束取消抽奖')
+    // if ((message.timeout - (Date.now() + delay)) <= 3000) {
+    //    tools.Log(message.title, message.id, '抽奖已结束取消抽奖')
+    //    this._Lottery()
+    //    return
+    // }
     if (delay !== 0) await tools.Sleep(delay)
+    users = this.users
     for (let [uid, user] of users) {
       if (user.captchaJPEG !== '' || !user.userData[message.cmd]) continue
       if (this._raffleBanList.get(uid)) continue

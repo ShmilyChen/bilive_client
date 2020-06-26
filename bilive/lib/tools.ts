@@ -99,7 +99,7 @@ class Tools extends EventEmitter {
         this.Log('接口风控', options.url)
         // @ts-ignore
         setTimeout(() => this.ban[options.url] = false, 10 * 60 * 1000)
-        this.Log(this.ban)
+        this.ErrorLog(this.ban)
       }
     })
     if (gotResponse === undefined) return

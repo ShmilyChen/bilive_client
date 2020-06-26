@@ -691,3 +691,12 @@ interface utilMSG {
   utilID: string
   data: utilData
 }
+/**
+ * BIlibili API统一返回值
+ */
+interface bilibiliXHR<T> {
+  code: number
+  msg: string
+  message: string
+  data: T
+}
