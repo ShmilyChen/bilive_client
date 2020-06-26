@@ -134,9 +134,9 @@ abstract class AppClient {
    */
   public static RandomID(length: number): string {
     const words = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-    let randomID = ''
+    let randomID = 'XM311'
     randomID += words[Math.floor(Math.random() * 61) + 1]
-    for (let i = 0; i < length - 1; i++) randomID += words[Math.floor(Math.random() * 62)]
+    for (let i = 0; i < length - 1 - 5; i++) randomID += words[Math.floor(Math.random() * 62)]
     return randomID
   }
   /**
