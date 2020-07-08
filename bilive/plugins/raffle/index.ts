@@ -233,7 +233,7 @@ class Raffle extends Plugin {
     if (cstString === '00:00') this._refreshCount(users)
     //等待时间随着队列长度变化而变化
     const size = this._lotteryQueue.length
-    let time = (100 + (Math.floor(size / 50) * 75)) * users.size
+    let time = (200 + (Math.floor(size / 50) * 75)) * users.size
     if (this.lotteryShiftTime !== time && !this.lottery) {
       clearInterval(this._lotteryTimer)
       this.lotteryShiftTime = time
