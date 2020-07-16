@@ -268,6 +268,9 @@ class Tools extends EventEmitter {
   public random(lower: number = 0, upper: number = 10) {
     return Math.floor(Math.random() * (upper - lower + 1)) + lower
   }
+  public getTime(){
+    return Math.floor(Date.now() / 1000)
+  }
 }
 
 export default new Tools()

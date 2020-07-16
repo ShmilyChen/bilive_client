@@ -32,6 +32,7 @@ abstract class AppClient {
   public static readonly build: string = '6000200'
   public static readonly appBuild: string = '6.0.0'
   public static get buvid(): string { return this.RandomID(37).toLocaleUpperCase() }
+  public static get uuid(): string { return this.RandomID(37).toLocaleUpperCase() }
   public static readonly channel: string = 'bili'
   public static readonly device: string = 'phone'
   // 同一客户端与biliLocalId相同
@@ -247,6 +248,7 @@ abstract class AppClient {
   public build: string = AppClient.build
   public appBuild: string = AppClient.appBuild
   public buvid = AppClient.buvid
+  public uuid = AppClient.uuid
   public channel: string = AppClient.channel
   public device: string = AppClient.device
   public deviceId: string = this.biliLocalId

@@ -81,7 +81,7 @@ interface optionsInfo {
 interface configInfoData {
   description: string
   tip: string
-  type: string
+  type: 'boolean' | 'number' | 'numberArray' | 'string' | 'stringArray' | string
   cognate?: string
 }
 /*******************
