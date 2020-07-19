@@ -4,15 +4,15 @@ class SendGift extends Plugin {
   constructor() {
     super()
   }
-  public name = '自动送礼'
+  public name = '自动送礼增强版'
   public description = '自动清空在指定时间内的礼物'
-  public version = '0.1.0'
-  public author = 'lzghzr && ShmilyChen'
+  public version = '0.2.0'
+  public author = 'ShmilyChen'
   public async load({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
     // 自动送礼
     defaultOptions.newUserData['sendGift'] = false
     defaultOptions.info['sendGift'] = {
-      description: '自动送礼',
+      description: '自动送礼增强',
       tip: '自动送出剩余时间不足24小时的礼物',
       type: 'boolean'
     }
@@ -212,7 +212,7 @@ class SendGift extends Plugin {
       for (const bag of bagList) {
         if (bag.gift_num === 0) continue
         if (bag.expireat <= 0 || bag.expireat > <number>user.userData['sendGiftDay'] * 24 * 60 * 60) break
-        let gift_value = 0
+        let gift_value
         switch (bag.gift_id) {
           case 1:
             // 辣条
