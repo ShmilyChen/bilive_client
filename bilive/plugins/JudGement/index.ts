@@ -32,7 +32,7 @@ class JudGement extends Plugin {
 
   private async doJudGement(users: Map<string, User>) {
     for (const { 1: user } of users) {
-      if (!user.userData['judGement']) return
+      if (!user.userData['judGement']) continue
       const flag = await this.getJudGementInfo(user)
       await tools.Sleep(5 * 1000)
       if (flag) {

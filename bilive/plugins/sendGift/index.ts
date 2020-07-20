@@ -87,7 +87,8 @@ class SendGift extends Plugin {
           for (const giftData of bagList) {
             if (giftData.expireat > 0 && giftData.expireat < 24 * 60 * 60 && giftData.gift_num > 0) {
               // expireat单位为分钟, 永久礼物值为0
-              await this.sendGift(uid, giftData.gift_id, giftData.gift_num, giftData.id, room_id, user)
+              const flog = await this.sendGift(uid, giftData.gift_id, giftData.gift_num, giftData.id, room_id, user)
+              if (flog === -1) return
             }
           }
         }
@@ -98,7 +99,6 @@ class SendGift extends Plugin {
   }
   /**
    * 赠送礼物
-   * @param uid 用户uid
    * @param mid 主播uid
    * @param gift_id 礼物id
    * @param gift_num 礼物数量
@@ -120,12 +120,16 @@ class SendGift extends Plugin {
       if (sendBag.body.code === 0) {
         const sendBagData = sendBag.body.data
         tools.Log(user.nickname, '自动送礼', `向房间 ${room_id} 赠送 ${sendBagData.gift_num} 个${sendBagData.gift_name}`)
+        return true
+      }else if(sendBag.body.code === 200030){
+        tools.Log(user.nickname, '自动送礼', sendBag.body.message)
+        return -1
       }
       else tools.Log(user.nickname, '自动送礼', sendBag.body)
     }
     else tools.Log(user.nickname, '自动送礼', '网络错误')
     await tools.Sleep(3000)
-    return true
+    return false
   }
   private async getBagInfo(user: User): Promise<bagInfoData[]> {
     const bag: XHRoptions = {
@@ -232,6 +236,7 @@ class SendGift extends Plugin {
         if (send_num >= bag.gift_num) send_num = bag.gift_num
         if (send_num > 0) {
           const flog = await this.sendGift(medal.mid, bag.gift_id, send_num, bag.id, medal.roomid, user)
+          if (flog === -1) return
           if (flog) {
             bag.gift_num -= send_num
             medal.feedNum -= send_num * gift_value

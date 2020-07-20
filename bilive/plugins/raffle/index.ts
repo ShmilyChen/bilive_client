@@ -295,6 +295,7 @@ class Raffle extends Plugin {
       if (tools.ban[`${Options._.advConfig[`${queue.message.cmd}API`]}/join`]) {
         this._lotteryQueue.push(queue)
       } else {
+        // user.userData[message.cmd]
         this._doRaffle(queue)
       }
     }
