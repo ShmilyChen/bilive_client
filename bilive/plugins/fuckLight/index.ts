@@ -6,23 +6,23 @@ class FuckLight extends Plugin {
     }
     public name = '自动点亮勋章'
     public description = '自动点亮灰色勋章'
-    public version = '0.0.1'
+    public version = '0.0.2'
     public author = 'ShmilyChen'
     public async load({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
-        defaultOptions.config['fuckLight'] = false
+        defaultOptions.newUserData['fuckLight'] = false
         defaultOptions.info['fuckLight'] = {
             description: '自动点亮勋章',
             tip: '自动点亮灰色勋章',
             type: 'boolean'
         }
         whiteList.add('fuckLight')
-        // defaultOptions.config['fuckLightPriority'] = []
-        // defaultOptions.info['fuckLightPriority'] = {
-        //     description: '点亮优先uid',
-        //     tip: '优先点亮点亮灰色勋章的uid',
-        //     type: 'numberArray'
-        // }
-        // whiteList.add('fuckLightPriority')
+        defaultOptions.newUserData['fuckLightLimt'] = 0
+        defaultOptions.info['fuckLightLimt'] = {
+            description: '点亮等级',
+            tip: '限制点亮勋章的等级，大于该等级才会点亮',
+            type: 'number'
+        }
+        whiteList.add('fuckLightLimt')
         this.loaded = true
     }
 
@@ -49,14 +49,13 @@ class FuckLight extends Plugin {
             for (const notLigh of notLightList) {
                 let flog: number = 0
                 for (const i in bagList) {
-                    if (bagList[i].gift_num <=0 ) continue
-                    flog = await this.sendGift(notLigh.target_id, bagList[i].gift_id, 1, bagList[i].id, notLigh.room_id, notLigh.target_name, user)
+                    if (bagList[i].gift_num <= 0) continue
+                    flog = await this.sendGift(notLigh.target_id, bagList[i].gift_id, 1, bagList[i].id, notLigh.roomid, notLigh.target_name, user)
                     if (flog === 1) {
                         bagList[i].gift_num--
                         break
                     }
                 }
-                if (flog === -1) break
             }
         }
     }
@@ -64,19 +63,27 @@ class FuckLight extends Plugin {
      * 获取没有点亮勋章的列表
      * @param user 
      */
-    private async getNotLightList(user: User) {
-        const medals: XHRoptions = {
-            method: 'POST',
-            url: `https://api.live.bilibili.com/fans_medal/v2/HighQps/received_medals?${AppClient.signQueryBase(user.tokenQuery)}`,
-            json: true,
-            headers: user.headers
+    private async getNotLightList(user: User): Promise<FansMedalList[]> {
+        let fansMedalList = new Array<FansMedalList>()
+        for (let i = 1; i <= 1000 / 25; i++) {
+            const medalList: XHRoptions = {
+                url: `https://api.live.bilibili.com/i/api/medal?page=${i}&pageSize=25`,
+                responseType: 'json',
+                jar: user.jar
+            }
+            const medalListInfo = await tools.XHR<bilibiliXHR<medelData>>(medalList)
+            if (medalListInfo !== undefined && medalListInfo.response.statusCode === 200) {
+                if (medalListInfo.body.code === 0) {
+                    fansMedalList = fansMedalList.concat(medalListInfo.body.data.fansMedalList)
+                    if (medalListInfo.body.data.pageinfo.totalpages === i) break
+                    await tools.Sleep(3 * 1000)
+                } else {
+                    i-- && await tools.Sleep(3 * 1000)
+                }
+            }
         }
-        const list = await tools.XHR<bilibiliXHR<medalsData>>(medals, 'Android')
-        let notLightList = new Array<medalsDataList>()
-        if (list !== undefined && list.response.statusCode === 200 && list.body.code === 0) {
-            notLightList = list.body.data.list.filter(medal => medal.is_lighted === 0)
-        }
-        return notLightList
+        fansMedalList = fansMedalList.filter(medal => medal.is_lighted === 0 && medal.level >= (user.userData['fuckLightLimt'] || 0) && medal.target_id !== user.biliUID)
+        return fansMedalList
     }
 
     private async getBagInfo(user: User): Promise<bagInfoData[]> {
@@ -111,7 +118,7 @@ class FuckLight extends Plugin {
         const send: XHRoptions = {
             method: 'POST',
             url: `https://api.live.bilibili.com/gift/v2/live/bag_send?${AppClient.signQueryBase(user.tokenQuery)}`,
-            body: `uid=${user.uid}&ruid=${mid}&gift_id=${gift_id}&gift_num=${gift_num}&bag_id=${bag_id}&biz_id=${room_id}&rnd=${AppClient.RND}&biz_code=live&jumpFrom=21002`,
+            body: `uid=${user.biliUID}&ruid=${mid}&send_ruid=0&gift_id=${gift_id}&gift_num=${gift_num}&bag_id=${bag_id}&biz_id=${room_id}&rnd=${AppClient.RND}&biz_code=live&data_behavior_id=&data_source_id=&jumpfrom=21001&version=${AppClient.appBuild}&click_id=&session_id=`,
             responseType: 'json',
             headers: user.headers
         }
@@ -133,51 +140,62 @@ class FuckLight extends Plugin {
     }
 }
 
-interface medalsData {
-    max: number
-    cnt: number
-    list: medalsDataList[]
+interface medelData {
+    medalCount: number
+    count: number
+    fansMedalList: FansMedalList[]
+    name: string
+    pageinfo: Pageinfo
 }
 
-interface medalsDataList {
-    buff_msg: string
+interface FansMedalList {
+    uid: number
+    target_id: number
+    medal_id: number
+    score: number
+    level: number
+    intimacy: number
+    status: number
+    source: number
+    receive_channel: number
+    is_receive: number
+    master_status: number
+    receive_time: string
+    today_intimacy: number
+    last_wear_time: number
+    is_lighted: number
+    medal_level: number
+    next_intimacy: number
     day_limit: number
-    guard_level: number
+    medal_name: string
+    master_available: number
     guard_type: number
+    lpl_status: number
+    can_delete: boolean
+    target_name: string
+    target_face: string
+    live_stream_status: number
     icon_code: number
     icon_text: string
-    intimacy: number
-    is_lighted: number
-    is_receive: number
-    last_wear_time: number
-    level: number
-    live_stream_status: 0 | 1
-    lpl_status: number
-    master_available: number
-    master_status: number
-    medal_color: number
-    medal_color_border: number
-    medal_color_end: number
-    medal_color_start: number
-    medal_id: number
-    medal_level: number
-    medal_name: string
-    next_intimacy: number
     rank: string
-    receive_channel: number
-    receive_time: string
-    room_id: number
-    score: number
-    source: number
-    status: number
-    sup_code: number
-    sup_text: string
-    target_face: string
-    target_id: number
-    target_name: string
+    medal_color: number
+    medal_color_start: number
+    medal_color_end: number
+    guard_level: number
+    medal_color_border: number
     today_feed: number
-    today_intimacy: number
-    uid: number
+    todayFeed: number
+    dayLimit: number
+    uname: string
+    color: number
+    medalName: string
+    guard_medal_title: string
+    roomid: number
+}
+
+interface Pageinfo {
+    totalpages: number
+    curPage: number
 }
 
 interface bagInfoData {
