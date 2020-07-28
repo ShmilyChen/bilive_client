@@ -70,7 +70,7 @@ class JudGement extends Plugin {
         if (caseList !== undefined && caseList.response.statusCode === 2000 && caseList.body.code === 0) {
           for (const data of caseList.body.data.filter(data => data.vote === 0)) {
             await this.doVote(data.id, user)
-            await tools.Sleep(tools.random(5, 30) * 1000)
+            await tools.Sleep(tools.random(5, 20) * 1000)
           }
         }
 
@@ -148,7 +148,7 @@ class JudGement extends Plugin {
     }
     const juryCaseData = juryCase.body.data
     tools.Log(user.nickname, '风纪新案件', `案件id：${id}用户:${juryCaseData.uname}涉嫌:${juryCaseData.punishTitle}，发布内容:${juryCaseData.originContent}`)
-    await tools.Sleep(5 * 1000)
+    await tools.Sleep(tools.random(30, 90) * 1000)
     // 获取大家的投票结果
     const caseListXHR: XHRoptions = {
       url: `https://api.bilibili.com/x/credit/jury/caseList?jsonp=jsonp&pn=1&ps=20&_=${Date.now()}`,
@@ -171,7 +171,7 @@ class JudGement extends Plugin {
         }
       })
     }
-    await tools.Sleep(3 * 1000)
+    await tools.Sleep(tools.random(5, 10) * 1000)
     // 进行风纪投票
     const voteXHR: XHRoptions = {
       url: `https://api.bilibili.com/x/credit/jury/vote`,
@@ -185,7 +185,7 @@ class JudGement extends Plugin {
     if (voteData !== undefined && voteData.response.statusCode === 200 && voteData.body.code === 0) {
       const voteInfo = { 1: '封禁', 2: '否', 3: '弃权', 4: '删除' }
       // @ts-ignore
-      tools.Log(user.nickname, '风纪投票', `案件id：${id}，投票：${voteInfo[vote]}`)
+      tools.Log(user.nickname, '风纪投票', `案件id：${id}，投票：${voteInfo[vote] || vote}`)
       return true
     }
     tools.Log(user.nickname, '风纪投票', `案件id：，投票：失败`)
