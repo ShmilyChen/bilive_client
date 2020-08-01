@@ -25,7 +25,7 @@ class Task extends Plugin {
       type: 'boolean'
     }
     whiteList.add('doTask')
-    this.loaded = true
+    this.loaded = false
   }
   public async start({ users }: { users: Map<string, User> }) {
     this._task(users)
