@@ -52,7 +52,9 @@ class SendGift extends Plugin {
     this.loaded = true
   }
   public async start({ users }: { users: Map<string, User> }) {
-    this._sendGift(users)
+    setTimeout(() => {
+      this._sendGift(users)
+    }, 30 * 1000)
   }
   public async loop({ cstMin, cstHour, cstString, users }: { cstMin: number, cstHour: number, cstString: string, users: Map<string, User> }) {
     // 每天04:30, 12:30, 13:55, 20:30, 23:55自动送礼
@@ -121,7 +123,7 @@ class SendGift extends Plugin {
         const sendBagData = sendBag.body.data
         tools.Log(user.nickname, '自动送礼', `向房间 ${room_id} 赠送 ${sendBagData.gift_num} 个${sendBagData.gift_name}`)
         return true
-      }else if(sendBag.body.code === 200030){
+      } else if (sendBag.body.code === 200030) {
         tools.Log(user.nickname, '自动送礼', sendBag.body.message)
         return -1
       }
@@ -153,60 +155,67 @@ class SendGift extends Plugin {
    * 
    */
   private async getMedalList(user: User): Promise<medalInfo[]> {
-    const medalList: XHRoptions = {
-      url: `https://api.live.bilibili.com/i/api/medal?page=1&pageSize=25`,
-      responseType: 'json',
-      jar: user.jar
+    let fansMedalList = new Array<FansMedalList>()
+    let list = new Array<medalInfo>()
+    for (let i = 1; i <= 1000 / 25; i++) {
+      const medalList: XHRoptions = {
+        url: `https://api.live.bilibili.com/i/api/medal?page=${i}&pageSize=25`,
+        responseType: 'json',
+        jar: user.jar
+      }
+      const medalListInfo = await tools.XHR<bilibiliXHR<medelData>>(medalList)
+      if (medalListInfo !== undefined && medalListInfo.response.statusCode === 200) {
+        if (medalListInfo.body.code === 0) {
+          fansMedalList = fansMedalList.concat(medalListInfo.body.data.fansMedalList)
+          if (medalListInfo.body.data.pageinfo.totalpages === i) break
+          await tools.Sleep(3 * 1000)
+        } else {
+          tools.Log(user.nickname, '勋章信息', medalListInfo.body)
+          i-- && await tools.Sleep(3 * 1000)
+        }
+      }
     }
-    const medalListInfo = await tools.XHR<medalList>(medalList)
-    let fansMedalList = new Array<medalInfo>()
-    if (medalListInfo !== undefined && medalListInfo.response.statusCode === 200) {
-      if (medalListInfo.body.code === 0) {
-        medalListInfo.body.data.fansMedalList.sort((a, b) => a.level - b.level)
-        const uids = <Array<number>>user.userData['sendGiftUids']
-        // 从uid列表中抽取主播id，并依次插入任务队列，如果有佩戴勋章，进入队列顶部
-        uids.forEach((uid) => {
-          medalListInfo.body.data.fansMedalList.forEach((fansMedal) => {
-            if (fansMedal.level % 20 === 0 && !user.userData['sendGiftBy20']) return
-            if (uid === fansMedal.target_id) {
-              if (fansMedal.status === 1) {
-                fansMedalList.unshift({
-                  feedNum: fansMedal.day_limit - fansMedal.today_feed,
-                  mid: fansMedal.target_id,
-                  roomid: fansMedal.roomid
-                })
-              } else {
-                fansMedalList.push({
-                  feedNum: fansMedal.day_limit - fansMedal.today_feed,
-                  mid: fansMedal.target_id,
-                  roomid: fansMedal.roomid
-                })
-              }
-            }
-          })
-        })
-        // 将未插入队列的勋章插入队列，如果有佩戴勋章，进入队列顶部
-        medalListInfo.body.data.fansMedalList.forEach((fansMedal) => {
-          if (uids.indexOf(fansMedal.target_id) < 0)
+    const uids = <Array<number>>user.userData['sendGiftUids']
+    uids.forEach((uid) => {
+      fansMedalList
+        .sort((a, b) => a.level - b.level)
+        .forEach((fansMedal) => {
+          if (fansMedal.level % 20 === 0 && !user.userData['sendGiftBy20']) return
+          if (uid === fansMedal.target_id) {
             if (fansMedal.status === 1) {
-              fansMedalList.unshift({
+              list.unshift({
                 feedNum: fansMedal.day_limit - fansMedal.today_feed,
                 mid: fansMedal.target_id,
                 roomid: fansMedal.roomid
               })
             } else {
-              fansMedalList.push({
+              list.push({
                 feedNum: fansMedal.day_limit - fansMedal.today_feed,
                 mid: fansMedal.target_id,
                 roomid: fansMedal.roomid
               })
             }
+          }
         })
-      } else {
-        tools.Log(user.nickname, '勋章信息', medalListInfo.body)
-      }
-    }
-    return fansMedalList
+    })
+    // 将未插入队列的勋章插入队列，如果有佩戴勋章，进入队列顶部
+    fansMedalList.forEach((fansMedal) => {
+      if (uids.indexOf(fansMedal.target_id) < 0)
+        if (fansMedal.status === 1) {
+          list.unshift({
+            feedNum: fansMedal.day_limit - fansMedal.today_feed,
+            mid: fansMedal.target_id,
+            roomid: fansMedal.roomid
+          })
+        } else {
+          list.push({
+            feedNum: fansMedal.day_limit - fansMedal.today_feed,
+            mid: fansMedal.target_id,
+            roomid: fansMedal.roomid
+          })
+        }
+    })
+    return list
   }
   private async sendGiftByMedal(user: User, bagList: bagInfoData[]) {
     const medalInfo = await this.getMedalList(user)
@@ -327,47 +336,62 @@ interface sendBagData {
   rnd: string
 }
 
-interface medalList {
-  code: number
-  msg: string
-  message: string
-  data: medalListData
-}
-
-interface medalListData {
+interface medelData {
   medalCount: number
   count: number
-  fansMedalList: fansMedalList[]
+  fansMedalList: FansMedalList[]
   name: string
+  pageinfo: Pageinfo
 }
 
-interface fansMedalList {
-  /**
-   * 今日投喂数量
-   */
-  today_feed: number
-  /**
-   * 亲密度上限
-   */
-  day_limit: number
-  /**
-   * 房间号
-   */
-  roomid: number
-  /**
-   * 主播uid
-   */
+interface FansMedalList {
+  uid: number
   target_id: number
-  /**
-   * 是否佩戴勋章
-   * 1 佩戴
-   * 0 未佩戴
-   */
-  status: 0 | 1
-  /**
-   * 勋章等级
-   */
+  medal_id: number
+  score: number
   level: number
+  intimacy: number
+  status: number
+  source: number
+  receive_channel: number
+  is_receive: number
+  master_status: number
+  receive_time: string
+  today_intimacy: number
+  last_wear_time: number
+  is_lighted: number
+  medal_level: number
+  next_intimacy: number
+  day_limit: number
+  medal_name: string
+  master_available: number
+  guard_type: number
+  lpl_status: number
+  can_delete: boolean
+  target_name: string
+  target_face: string
+  live_stream_status: number
+  icon_code: number
+  icon_text: string
+  rank: string
+  medal_color: number
+  medal_color_start: number
+  medal_color_end: number
+  guard_level: number
+  medal_color_border: number
+  today_feed: number
+  todayFeed: number
+  dayLimit: number
+  uname: string
+  color: number
+  medalName: string
+  guard_medal_title: string
+  roomid: number
+}
+
+interface Pageinfo {
+  totalpages: number
+  curPage: number
 }
 
 interface medalInfo {
