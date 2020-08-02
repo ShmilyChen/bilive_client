@@ -239,20 +239,30 @@ class Raffle extends EventEmitter {
    * @memberof Raffle
    */
   private async _BeatStorm() {
+    if (<number[]>Options._.advConfig.stormSetting === undefined) return
+    this._doAppStorm()
+    this._doWebStorm()
+  }
+
+  /**
+   * 
+   */
+  private stormFlog: boolean = false
+  /**
+   * Web端进行风暴抽奖
+   */
+  private async _doWebStorm() {
     const { id, roomID, title } = this._raffleMessage
     const join: XHRoptions = {
       method: 'POST',
-      uri: `${this._url}/join`,
-      body: AppClient.signQuery(`${this._user.tokenQuery}&${AppClient.baseQuery}&id=${id}&roomid=${roomID}`),
+      uri: `https://api.live.bilibili.com/xlive/lottery-interface/v1/storm/Join`,
+      body: `id=${id}&color=16777215&captcha_token=&captcha_phrase=&roomid=${roomID}&csrf_token=${tools.getCookie(this._user.jar, 'bili_jct')}&csrf=${tools.getCookie(this._user.jar, 'bili_jct')}&visit_id=`,
       json: true,
-      headers: this._user.headers
+      jar: this._user.jar,
+      headers: { referer: `https://live.bilibili.com/${roomID}` }
     }
-    let num: number = 1
-    if ((<beatStormMessage>this._raffleMessage).num !== undefined)
-      num = (<beatStormMessage>this._raffleMessage).num
-    if (<number[]>Options._.advConfig.stormSetting === undefined) return
-    for (let i = 1; i <= (<number[]>Options._.advConfig.stormSetting)[1] * num; i++) {
-      let joinStorm = await tools.XHR<joinStorm>(join, 'Android')
+    for (let i = 1; i <= (<number[]>Options._.advConfig.stormSetting)[1] && !this.stormFlog; i++) {
+      const joinStorm = await tools.XHR<joinStorm>(join)
       if (joinStorm === undefined) break
       if (joinStorm.response.statusCode !== 200) {
         tools.Log(this._user.nickname, title, id, joinStorm.response.statusCode)
@@ -261,7 +271,7 @@ class Raffle extends EventEmitter {
       if (joinStorm.body.code === 0) {
         const content = joinStorm.body.data
         if (content !== undefined && content.gift_num > 0) {
-          tools.Log(this._user.nickname, title, id, `第${i}次尝试`, `${content.mobile_content} 获得 ${content.gift_num} 个${content.gift_name}`)
+          tools.Log(this._user.nickname, title, id, `Web端第${i}次尝试`, `${content.mobile_content} 获得 ${content.gift_num} 个${content.gift_name}`)
           this.emit('msg', {
             cmd: 'earn',
             data: {
@@ -272,10 +282,68 @@ class Raffle extends EventEmitter {
               num: content.gift_num
             }
           })
+          this.stormFlog = true
           break
         }
       }
-      // else tools.Log(this._user.nickname, title, id, `第${i}次尝试`, joinStorm.body.msg)
+      // else tools.Log(this._user.nickname, title, id, `Web第${i}次尝试`, joinStorm.body.code, joinStorm.body.msg)
+      if (joinStorm.body.msg === '访问被拒绝') {
+        this.emit('msg', {
+          cmd: 'ban',
+          data: { uid: this._user.uid, type: 'beatStorm', nickname: this._user.nickname }
+        })
+        break
+      } else if (joinStorm.body.msg === '已经领取奖励') {
+        tools.Log(this._user.nickname, title, id, joinStorm.body.msg)
+        break
+      }
+      else if (joinStorm.body.msg === '节奏风暴抽奖过期') break
+      if (joinStorm.body.msg === '你错过了奖励，下次要更快一点哦~') this.emit('msg', {
+        cmd: 'unban',
+        data: { uid: this._user.uid, type: 'beatStorm', nickname: this._user.nickname }
+      })
+      await tools.Sleep((<number[]>Options._.advConfig.stormSetting)[0])
+    }
+  }
+
+  /**
+   * App端进行风暴抽奖
+   */
+  private async _doAppStorm() {
+    const { id, roomID, title } = this._raffleMessage
+    const join: XHRoptions = {
+      method: 'POST',
+      uri: `${this._url}/join`,
+      body: AppClient.signQuery(`${this._user.tokenQuery}&${AppClient.baseQuery}&id=${id}&roomid=${roomID}`),
+      json: true,
+      headers: this._user.headers
+    }
+    for (let i = 1; i <= (<number[]>Options._.advConfig.stormSetting)[1] && !this.stormFlog; i++) {
+      let joinStorm = await tools.XHR<joinStorm>(join, 'Android')
+      if (joinStorm === undefined) break
+      if (joinStorm.response.statusCode !== 200) {
+        tools.Log(this._user.nickname, title, id, joinStorm.response.statusCode)
+        break
+      }
+      if (joinStorm.body.code === 0) {
+        const content = joinStorm.body.data
+        if (content !== undefined && content.gift_num > 0) {
+          tools.Log(this._user.nickname, title, id, `App端第${i}次尝试`, `${content.mobile_content} 获得 ${content.gift_num} 个${content.gift_name}`)
+          this.emit('msg', {
+            cmd: 'earn',
+            data: {
+              uid: this._user.uid,
+              nickname: this._user.nickname,
+              type: 'beatStorm',
+              name: content.gift_name,
+              num: content.gift_num
+            }
+          })
+          this.stormFlog = true
+          break
+        }
+      }
+      // else tools.Log(this._user.nickname, title, id, `App第${i}次尝试`, joinStorm.body.code, joinStorm.body.msg)
       if (joinStorm.body.msg === '访问被拒绝') {
         this.emit('msg', {
           cmd: 'ban',
