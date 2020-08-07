@@ -115,51 +115,12 @@ class Raffle extends Plugin {
       type: 'number'
     }
     whiteList.add('beatStormLimit')
-    // beatStorm优先级
-    defaultOptions.newUserData['beatStormPriority'] = 0
-    defaultOptions.info['beatStormPriority'] = {
-      description: '风暴优先级',
-      tip: '各用户领取风暴的优先级，优先级较低的用户会受并发控制而不参与抽奖',
-      type: 'number'
-    }
-    whiteList.add('beatStormPriority')
     // beatStorm领取量
     defaultOptions.newUserData['beatStormTaken'] = 0
     whiteList.add('beatStormTaken')
     // beatStorm刷新时间
     defaultOptions.advConfig['beatStormRefresh'] = Date.now()
     whiteList.add('beatStormRefresh')
-    /**
-     * 抽奖api
-     */
-    defaultOptions.advConfig['raffleAPI'] = 'https://api.live.bilibili.com/gift/v4/smalltv'
-    defaultOptions.info['raffleAPI'] = {
-      description: 'raffleAPI',
-      tip: 'raffle类抽奖API',
-      type: 'string'
-    }
-    whiteList.add('raffleAPI')
-    defaultOptions.advConfig['lotteryAPI'] = 'https://api.live.bilibili.com/xlive/lottery-interface/v2/Lottery'
-    defaultOptions.info['lotteryAPI'] = {
-      description: 'lotteryAPI',
-      tip: 'lottery类抽奖API',
-      type: 'string'
-    }
-    whiteList.add('lotteryAPI')
-    defaultOptions.advConfig['pklotteryAPI'] = 'https://api.live.bilibili.com/xlive/lottery-interface/v1/pk'
-    defaultOptions.info['pklotteryAPI'] = {
-      description: 'pklotteryAPI',
-      tip: 'pklottery类抽奖API',
-      type: 'string'
-    }
-    whiteList.add('pklotteryAPI')
-    defaultOptions.advConfig['beatStormAPI'] = 'https://api.live.bilibili.com/lottery/v1/Storm'
-    defaultOptions.info['beatStormAPI'] = {
-      description: 'beatStormAPI',
-      tip: 'beatStorm类抽奖API',
-      type: 'string'
-    }
-    whiteList.add('beatStormAPI')
 
     this._lotteryTimer = setInterval(() => this._Lottery(), this.lotteryShiftTime)
 
@@ -190,27 +151,27 @@ class Raffle extends Plugin {
     if (Date.now() - <number>options.advConfig['beatStormRefresh'] < todaySecondsPassed * 1000)
       users.forEach(async (user, uid) => this._stormEarn[uid] = user.userData['beatStormTaken'])
   }
-  /**
-   * 计算优先级，确定用户是否允许抽奖
-   * 
-   * @param users 
-   * @private
-   * @returns {number}
-   */
-  private async _getPriorityLimit(options: options, users: Map<string, User>): Promise<number> {
-    let userPriority: Array<number> = new Array()
-    users.forEach(async (user, uid) => {
-      if (this._raffleBanList.get(uid) || this._stormBanList.get(uid)) return
-      if (!user.userData['beatStorm']) return
-      if (this._stormEarn[uid] !== undefined && this._stormEarn[uid] >= <number>user.userData['beatStormLimit']) return
-      userPriority.push(<number>user.userData['beatStormPriority'])
-    })
-    let priorityAsc = userPriority.sort(function (a, b) { return a - b })
-    let order = priorityAsc.length - <number>options.advConfig['stormUserLimit']
-    if (order < 0) order = 0
-    let priority = priorityAsc[order]
-    return priority
-  }
+  // /**
+  //  * 计算优先级，确定用户是否允许抽奖
+  //  * 
+  //  * @param users 
+  //  * @private
+  //  * @returns {number}
+  //  */
+  // private async _getPriorityLimit(options: options, users: Map<string, User>): Promise<number> {
+  //   let userPriority: Array<number> = new Array()
+  //   users.forEach(async (user, uid) => {
+  //     if (this._raffleBanList.get(uid) || this._stormBanList.get(uid)) return
+  //     if (!user.userData['beatStorm']) return
+  //     if (this._stormEarn[uid] !== undefined && this._stormEarn[uid] >= <number>user.userData['beatStormLimit']) return
+  //     userPriority.push(<number>user.userData['beatStormPriority'])
+  //   })
+  //   let priorityAsc = userPriority.sort(function (a, b) { return a - b })
+  //   let order = priorityAsc.length - <number>options.advConfig['stormUserLimit']
+  //   if (order < 0) order = 0
+  //   let priority = priorityAsc[order]
+  //   return priority
+  // }
   public async start({ options, users }: { options: options, users: Map<string, User> }) {
     this.users = users
     this._refreshCount(users)
@@ -369,6 +330,7 @@ class Raffle extends Plugin {
       await tools.Sleep(200)
     }
   }
+  // private whileList = [88950198, 32013538]
   /**
    * 进行beatStorm类抽奖
    * 
@@ -376,17 +338,14 @@ class Raffle extends Plugin {
    * @private
    */
   private async _doStorm({ message, options, users }: { message: beatStormMessage, options: options, users: Map<string, User> }) {
-    const stormPriorityTheshold = await this._getPriorityLimit(options, users)
     users.forEach(async (user, uid) => {
+      // if (!this.whileList.includes(user.biliUID)) return
       if (user.captchaJPEG !== '' || !user.userData['beatStorm']) return
       if (this._raffleBanList.get(uid) || this._stormBanList.get(uid)) return
       if (this._stormEarn[uid] !== undefined && this._stormEarn[uid] >= <number>user.userData['beatStormLimit']) return
-      if (<number>user.userData['beatStormPriority'] < stormPriorityTheshold) return
       const droprate = <number>options.advConfig['beatStormDrop']
       if (droprate !== 0 && Math.random() < droprate / 100) tools.Log(user.nickname, '丢弃抽奖', message.id)
       else {
-        const delay = <number>options.advConfig['beatStormDelay']
-        if (delay !== 0) await tools.Sleep(delay)
         const lottery = new Lottery(message, user, options)
         lottery
           .on('msg', (msg: pluginNotify) => {

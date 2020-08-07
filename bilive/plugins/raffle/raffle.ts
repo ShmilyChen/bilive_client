@@ -46,14 +46,6 @@ class Raffle extends EventEmitter {
    * @memberof Raffle
    */
   private _options: options
-  /**
-   * 抽奖地址
-   *
-   * @private
-   * @type {string}
-   * @memberof Raffle
-   */
-  private _url!: string
 
   /**
    * 开始抽奖
@@ -61,7 +53,6 @@ class Raffle extends EventEmitter {
    * @memberof Raffle
    */
   public async Start() {
-    this._url = <string>this._options.advConfig[`${this._raffleMessage.cmd}API`]
     switch (this._raffleMessage.cmd) {
       case 'raffle':
         this._Raffle()
@@ -101,7 +92,7 @@ class Raffle extends EventEmitter {
     const { cmd, id, roomID, title, type } = <raffleMessage>this._raffleMessage
     const reward: XHRoptions = {
       method: 'POST',
-      uri: `${this._url}/getAward`,
+      uri: `https://api.live.bilibili.com/gift/v4/smalltv/getAward`,
       body: AppClient.signQueryBase(`${this._user.tokenQuery}&raffleId=${id}&roomid=${roomID}&type=${type}`),
       json: true,
       headers: this._user.headers
@@ -161,7 +152,7 @@ class Raffle extends EventEmitter {
     const { id, roomID, title, type } = <lotteryMessage>this._raffleMessage
     const reward: XHRoptions = {
       method: 'POST',
-      uri: `${this._url}/join`,
+      uri: `https://api.live.bilibili.com/xlive/lottery-interface/v2/Lottery/join`,
       body: AppClient.signQueryBase(`${this._user.tokenQuery}&id=${id}&roomid=${roomID}&type=${type}`),
       json: true,
       headers: this._user.headers
@@ -206,7 +197,7 @@ class Raffle extends EventEmitter {
     const { id, roomID, title } = <lotteryMessage>this._raffleMessage
     const reward: XHRoptions = {
       method: 'POST',
-      uri: `${this._url}/join`,
+      uri: `https://api.live.bilibili.com/xlive/lottery-interface/v1/pk/join`,
       body: `roomid=${roomID}&id=${id}&csrf_token=${tools.getCookie(this._user.jar, 'bili_jct')}&csrf=${tools.getCookie(this._user.jar, 'bili_jct')}`,
       jar: this._user.jar,
       json: true,
@@ -240,13 +231,15 @@ class Raffle extends EventEmitter {
    */
   private async _BeatStorm() {
     if (<number[]>Options._.advConfig.stormSetting === undefined) return
-    this._doAppStorm()
-    this._doWebStorm()
+    const { 0: wait, 1: limt } = <Array<number>>Options._.advConfig.stormSetting
+    this._doWebStorm(wait, limt)
+    this._doAppStorm(wait, limt)
   }
+
   /**
    * Web端进行风暴抽奖
    */
-  private async _doWebStorm() {
+  private async _doWebStorm(wait: number, limt: number) {
     // const start = Date.now()
     const { id, roomID, title } = this._raffleMessage
     const join: XHRoptions = {
@@ -257,7 +250,7 @@ class Raffle extends EventEmitter {
       jar: this._user.jar,
       headers: { referer: `https://live.bilibili.com/${roomID}` }
     }
-    for (let i = 1; i <= (<number[]>Options._.advConfig.stormSetting)[1]; i++) {
+    for (let i = 1; i <= limt; i++) {
       const joinStorm = await tools.XHR<joinStorm>(join)
       if (joinStorm === undefined) break
       if (joinStorm.response.statusCode !== 200) {
@@ -298,23 +291,23 @@ class Raffle extends EventEmitter {
         data: { uid: this._user.uid, type: 'beatStorm', nickname: this._user.nickname }
       })
       // await tools.Sleep(start+(<number[]>Options._.advConfig.stormSetting)[0] - Date.now())
-      await tools.Sleep((<number[]>Options._.advConfig.stormSetting)[0])
+      await tools.Sleep(wait)
     }
   }
 
   /**
    * App端进行风暴抽奖
    */
-  private async _doAppStorm() {
+  private async _doAppStorm(wait: number, limt: number) {
     const { id, roomID, title } = this._raffleMessage
     const join: XHRoptions = {
       method: 'POST',
-      uri: `${this._url}/join`,
+      uri: 'https://api.live.bilibili.com/lottery/v1/Storm/join',
       body: AppClient.signQuery(`${this._user.tokenQuery}&${AppClient.baseQuery}&id=${id}&roomid=${roomID}`),
       json: true,
       headers: this._user.headers
     }
-    for (let i = 1; i <= (<number[]>Options._.advConfig.stormSetting)[1]; i++) {
+    for (let i = 1; i <= limt; i++) {
       let joinStorm = await tools.XHR<joinStorm>(join, 'Android')
       if (joinStorm === undefined) break
       if (joinStorm.response.statusCode !== 200) {
@@ -355,7 +348,7 @@ class Raffle extends EventEmitter {
         data: { uid: this._user.uid, type: 'beatStorm', nickname: this._user.nickname }
       })
       // await tools.Sleep(start+(<number[]>Options._.advConfig.stormSetting)[0] - Date.now())
-      await tools.Sleep((<number[]>Options._.advConfig.stormSetting)[0])
+      await tools.Sleep(wait)
     }
   }
 }

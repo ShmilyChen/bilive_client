@@ -174,26 +174,46 @@ class Tools extends EventEmitter {
     return new Date().toString().slice(4, 24)
   }
 
-  public format = (fmt: string, date: Date = new Date()) => {
-    let o: any = {
-      "Y+": date.getFullYear().toString(),        // 年
-      "y+": date.getFullYear().toString(),        // 年
-      "m+": (date.getMonth() + 1).toString(),     // 月
-      "d+": date.getDate().toString(),            // 日
-      "H+": date.getHours().toString(),           // 时
-      "M+": date.getMinutes().toString(),         // 分
-      "S+": date.getSeconds().toString()          // 秒
+  public format = (format: string, date: Date = new Date()) => {
+    /*
+     * eg:format="yyyy-MM-dd hh:mm:ss";
+     */
+    let o: { [index: string]: number | string } = {
+      "M+": date.getMonth() + 1, // month
+      "d+": date.getDate(), // day
+      "h+": date.getHours(), // hour
+      "m+": date.getMinutes(), // minute
+      "s+": date.getSeconds(), // second
+      "q+": Math.floor((date.getMonth() + 3) / 3), // quarter
+      "S+": date.getMilliseconds()
+      // millisecond
     }
 
-    if (/(y+)/.test(fmt)) {
-      fmt = fmt.replace(RegExp.$1, (date.getFullYear() + "").substr(4 - RegExp.$1.length))
+    if (/(y+)/.test(format)) {
+      format = format.replace(RegExp.$1, (date.getFullYear() + "").substr(4
+        - RegExp.$1.length));
     }
+
     for (let k in o) {
-      if (new RegExp("(" + k + ")").test(fmt)) {
-        fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)))
+      if (new RegExp("(" + k + ")").test(format)) {
+        let formatStr = "";
+        for (let i = 1; i <= RegExp.$1.length; i++) {
+          formatStr += "0";
+        }
+
+        let replaceStr = "";
+        if (RegExp.$1.length == 1) {
+          replaceStr = o[k].toString();
+        } else {
+          formatStr = formatStr + o[k];
+          let index = ("" + o[k]).length;
+          formatStr = formatStr.substr(index);
+          replaceStr = formatStr;
+        }
+        format = format.replace(RegExp.$1, replaceStr);
       }
     }
-    return fmt
+    return format;
   }
   /**
    * 格式化输出, 配合PM2凑合用
@@ -202,7 +222,7 @@ class Tools extends EventEmitter {
    * @memberof tools
    */
   public Log(...message: any[]) {
-    const log = util.format(`${this.format("yyyy-mm-dd HH:MM:SS")} :`, ...message)
+    const log = util.format(`${this.format("yyyy-MM-dd hh:mm:ss:SSS")} :`, ...message)
     if (this.logs.length > 500) this.logs.shift()
     this.emit('log', log)
     this.logs.push(log)
@@ -268,7 +288,7 @@ class Tools extends EventEmitter {
   public random(lower: number = 0, upper: number = 10) {
     return Math.floor(Math.random() * (upper - lower + 1)) + lower
   }
-  public getTime(){
+  public getTime() {
     return Math.floor(Date.now() / 1000)
   }
 }
