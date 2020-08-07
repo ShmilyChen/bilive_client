@@ -307,6 +307,7 @@ class Raffle extends EventEmitter {
       json: true,
       headers: this._user.headers
     }
+    if (wait <= 350) wait = 350
     for (let i = 1; i <= limt; i++) {
       let joinStorm = await tools.XHR<joinStorm>(join, 'Android')
       if (joinStorm === undefined) break
