@@ -243,15 +243,11 @@ class Raffle extends EventEmitter {
     this._doAppStorm()
     this._doWebStorm()
   }
-
-  /**
-   * 
-   */
-  private stormFlog: boolean = false
   /**
    * Web端进行风暴抽奖
    */
   private async _doWebStorm() {
+    // const start = Date.now()
     const { id, roomID, title } = this._raffleMessage
     const join: XHRoptions = {
       method: 'POST',
@@ -261,7 +257,7 @@ class Raffle extends EventEmitter {
       jar: this._user.jar,
       headers: { referer: `https://live.bilibili.com/${roomID}` }
     }
-    for (let i = 1; i <= (<number[]>Options._.advConfig.stormSetting)[1] && !this.stormFlog; i++) {
+    for (let i = 1; i <= (<number[]>Options._.advConfig.stormSetting)[1]; i++) {
       const joinStorm = await tools.XHR<joinStorm>(join)
       if (joinStorm === undefined) break
       if (joinStorm.response.statusCode !== 200) {
@@ -282,7 +278,6 @@ class Raffle extends EventEmitter {
               num: content.gift_num
             }
           })
-          this.stormFlog = true
           break
         }
       }
@@ -302,6 +297,7 @@ class Raffle extends EventEmitter {
         cmd: 'unban',
         data: { uid: this._user.uid, type: 'beatStorm', nickname: this._user.nickname }
       })
+      // await tools.Sleep(start+(<number[]>Options._.advConfig.stormSetting)[0] - Date.now())
       await tools.Sleep((<number[]>Options._.advConfig.stormSetting)[0])
     }
   }
@@ -318,7 +314,7 @@ class Raffle extends EventEmitter {
       json: true,
       headers: this._user.headers
     }
-    for (let i = 1; i <= (<number[]>Options._.advConfig.stormSetting)[1] && !this.stormFlog; i++) {
+    for (let i = 1; i <= (<number[]>Options._.advConfig.stormSetting)[1]; i++) {
       let joinStorm = await tools.XHR<joinStorm>(join, 'Android')
       if (joinStorm === undefined) break
       if (joinStorm.response.statusCode !== 200) {
@@ -339,7 +335,6 @@ class Raffle extends EventEmitter {
               num: content.gift_num
             }
           })
-          this.stormFlog = true
           break
         }
       }
@@ -350,12 +345,16 @@ class Raffle extends EventEmitter {
           data: { uid: this._user.uid, type: 'beatStorm', nickname: this._user.nickname }
         })
         break
-      } else if (joinStorm.body.msg === '已经领取奖励') break
+      } else if (joinStorm.body.msg === '已经领取奖励') {
+        tools.Log(this._user.nickname, title, id, joinStorm.body.msg)
+        break
+      }
       else if (joinStorm.body.msg === '节奏风暴抽奖过期') break
       if (joinStorm.body.msg === '你错过了奖励，下次要更快一点哦~') this.emit('msg', {
         cmd: 'unban',
         data: { uid: this._user.uid, type: 'beatStorm', nickname: this._user.nickname }
       })
+      // await tools.Sleep(start+(<number[]>Options._.advConfig.stormSetting)[0] - Date.now())
       await tools.Sleep((<number[]>Options._.advConfig.stormSetting)[0])
     }
   }
