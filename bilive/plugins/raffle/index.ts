@@ -197,7 +197,7 @@ class Raffle extends Plugin {
    * @private
    * @returns {number}
    */
-  private async _getPriorityLimit(options: options, users: Map<string, User>) {
+  private async _getPriorityLimit(options: options, users: Map<string, User>): Promise<number> {
     let userPriority: Array<number> = new Array()
     users.forEach(async (user, uid) => {
       if (this._raffleBanList.get(uid) || this._stormBanList.get(uid)) return
