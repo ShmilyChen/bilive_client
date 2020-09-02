@@ -26,11 +26,11 @@ abstract class AppClient {
   // bilibili 客户端
   protected static readonly __loginSecretKey: string = '60698ba2f68e01ce44738920a0ffe768'
   public static readonly loginAppKey: string = 'bca7e84c2d947ac6'
-  protected static readonly __secretKey: string = '560c52ccd288fed045859ed18bffd973'
-  public static readonly appKey: string = '1d8b6e7d45233436'
+  protected static readonly __secretKey: string = '60698ba2f68e01ce44738920a0ffe768'
+  public static readonly appKey: string = 'bca7e84c2d947ac6'
   public static get biliLocalId(): string { return this.RandomID(64) }
-  public static readonly build: string = '6000200'
-  public static readonly appBuild: string = '6.0.0'
+  public static readonly build: string = '6070600'
+  public static readonly appBuild: string = '6.7.0'
   public static get buvid(): string { return this.RandomID(37).toLocaleUpperCase() }
   public static get uuid(): string { return this.RandomID(37).toLocaleUpperCase() }
   public static readonly channel: string = 'bili'

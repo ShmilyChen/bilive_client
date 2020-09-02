@@ -148,7 +148,7 @@ class JudGement extends Plugin {
     }
     const juryCaseData = juryCase.body.data
     tools.Log(user.nickname, '风纪新案件', `案件id：${id}用户:${juryCaseData.uname}涉嫌:${juryCaseData.punishTitle}，发布内容:${juryCaseData.originContent}`)
-    await tools.Sleep(tools.random(30, 90) * 1000)
+    await tools.Sleep(tools.random(120, 180) * 1000)
     // 获取大家的投票结果
     const caseListXHR: XHRoptions = {
       url: `https://api.bilibili.com/x/credit/jury/caseList?jsonp=jsonp&pn=1&ps=20&_=${Date.now()}`,
@@ -191,7 +191,6 @@ class JudGement extends Plugin {
     tools.Log(user.nickname, '风纪投票', `案件id：，投票：失败`)
     return false
   }
-
 
 }
 interface juryData {

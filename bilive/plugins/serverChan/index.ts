@@ -82,6 +82,7 @@ class ServerChan extends Plugin {
     const send: XHRoptions = {
       method: 'POST',
       uri: `https://sc.ftqq.com/${serverChan}.send`,
+      // uri: `https://sctapi.ftqq.com/${serverChan}.send`,
       body: `text=bilive_client&desp=${message}`,
       json: true
     }

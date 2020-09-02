@@ -260,7 +260,7 @@ class Raffle extends EventEmitter {
       if (joinStorm.body.code === 0) {
         const content = joinStorm.body.data
         if (content !== undefined && content.gift_num > 0) {
-          tools.Log(this._user.nickname, title, id, `Web端第${i}次尝试`, `${content.mobile_content} 获得 ${content.gift_num} 个${content.gift_name}`)
+          tools.Log(this._user.nickname, title, id, 'Web', `第${i}次尝试`, `${content.mobile_content} 获得 ${content.gift_num} 个${content.gift_name}`)
           this.emit('msg', {
             cmd: 'earn',
             data: {
@@ -282,7 +282,7 @@ class Raffle extends EventEmitter {
         })
         break
       } else if (joinStorm.body.msg === '已经领取奖励') {
-        tools.Log(this._user.nickname, title, id, joinStorm.body.msg)
+        tools.Log(this._user.nickname, title, id, 'Web', `第${i}次尝试`, joinStorm.body.msg)
         break
       }
       else if (joinStorm.body.msg === '节奏风暴抽奖过期') break
@@ -318,7 +318,7 @@ class Raffle extends EventEmitter {
       if (joinStorm.body.code === 0) {
         const content = joinStorm.body.data
         if (content !== undefined && content.gift_num > 0) {
-          tools.Log(this._user.nickname, title, id, `App端第${i}次尝试`, `${content.mobile_content} 获得 ${content.gift_num} 个${content.gift_name}`)
+          tools.Log(this._user.nickname, title, id, 'App', `第${i}次尝试`, `${content.mobile_content} 获得 ${content.gift_num} 个${content.gift_name}`)
           this.emit('msg', {
             cmd: 'earn',
             data: {
@@ -340,7 +340,7 @@ class Raffle extends EventEmitter {
         })
         break
       } else if (joinStorm.body.msg === '已经领取奖励') {
-        tools.Log(this._user.nickname, title, id, joinStorm.body.msg)
+        tools.Log(this._user.nickname, title, id, 'App', `第${i}次尝试`, joinStorm.body.msg)
         break
       }
       else if (joinStorm.body.msg === '节奏风暴抽奖过期') break

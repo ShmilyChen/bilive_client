@@ -166,7 +166,7 @@ class SendGift extends Plugin {
       const medalListInfo = await tools.XHR<bilibiliXHR<medelData>>(medalList)
       if (medalListInfo !== undefined && medalListInfo.response.statusCode === 200) {
         if (medalListInfo.body.code === 0) {
-          fansMedalList = fansMedalList.concat(medalListInfo.body.data.fansMedalList)
+          fansMedalList = fansMedalList.concat(medalListInfo.body.data.fansMedalList.filter(medal => medal.level <= 20))
           if (medalListInfo.body.data.pageinfo.totalpages === i) break
           await tools.Sleep(3 * 1000)
         } else {
