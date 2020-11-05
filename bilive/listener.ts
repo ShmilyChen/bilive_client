@@ -23,22 +23,6 @@ class Listener extends EventEmitter {
    */
   private _DMclient: Map<number, DMclient> = new Map()
   /**
-   * 主WS服务器
-   *
-   * @private
-   * @type {Client}
-   * @memberof Listener
-   */
-  private _MainWSServer: Client = new Client('', '')
-  /**
-   * 备用WS服务器
-   *
-   * @private
-   * @type {Client}
-   * @memberof Listener
-   */
-  private _BackupWSServer: Client = new Client('', '')
-  /**
    * 抽奖ID
    *
    * @private
@@ -104,23 +88,30 @@ class Listener extends EventEmitter {
   private _lastUpdate: number = Date.now()
   // @ts-ignore
   private _loop: NodeJS.Timer
+  //@ts-ignore
+  private _updateRoomTimer: NodeJS.Timer
   /**
    * 开始监听
    *
    * @memberof Listener
    */
   public Start() {
-    if (Options._.config.localListener) this.updateAreaRoom()
-    this.connectWSServer()
+    // this.updateAreaRoom()
     // 3s清空一次消息缓存
     this._loop = setInterval(() => this._MSGCache.clear(), 3 * 1000)
+    // 10min更新一次房间
+    // this._updateRoomTimer = setInterval(() => this.updateAreaRoom(), 10 * 60 * 1000)
+    const { 0: server, 1: protocol } = Options._.config.serverURL.split('#')
+    if (protocol !== undefined && protocol !== '') this._RoomListener(server, protocol)
+    this.bakServerL()
+    // 房间监控
     tools.on('roomListener', (message: message) => {
       switch (message.cmd) {
         case 'raffle':
         case 'lottery':
         case 'pklottery':
         case 'beatStorm':
-        case 'anchor':
+        case 'anchorLot':
         case 'boxActivity':
           this._RaffleHandler(message)
           break
@@ -131,13 +122,14 @@ class Listener extends EventEmitter {
     })
   }
   /**
-   * 更新分区房间
-   *
-   * @memberof Listener
+   * 设置备用监听服务器
    */
-  private connectWSServer() {
-    this._RoomListener()
-    this._BAKRoomListener()
+  public async bakServerL() {
+    const serverList = Options._.config.bakServerURL.split(';')
+    serverList.forEach(serverURL => {
+      const { 0: server, 1: protocol } = serverURL.split('#')
+      if (protocol !== undefined && protocol !== '') this._RoomListener(server, protocol)
+    })
   }
   /**
    * 更新分区房间
@@ -145,11 +137,10 @@ class Listener extends EventEmitter {
    * @memberof Listener
    */
   public async updateAreaRoom() {
-    const userID = Options._.advConfig.defaultUserID
     // 获取直播列表
     const getAllList = await tools.XHR<getAllList>({
-      uri: `${apiLiveOrigin}/room/v2/AppIndex/getAllList?${AppClient.baseQuery}`,
-      json: true
+      url: `${apiLiveOrigin}/room/v2/AppIndex/getAllList?${AppClient.baseQuery}`,
+      responseType: 'json',
     }, 'Android')
     if (getAllList !== undefined && getAllList.response.statusCode === 200 && getAllList.body.code === 0) {
       const roomIDs: Set<number> = new Set()
@@ -162,7 +153,7 @@ class Listener extends EventEmitter {
       // 添加房间
       roomIDs.forEach(roomID => {
         if (this._DMclient.has(roomID)) return
-        const newDMclient = new DMclient({ roomID, userID })
+        const newDMclient = new DMclient({ roomID })
         newDMclient
           .on('NOTICE_MSG', dataJson => this._RaffleCheck(dataJson))
           .Connect()
@@ -185,7 +176,6 @@ class Listener extends EventEmitter {
     if (Date.now() - this._lastUpdate < 3 * 60 * 1000) return
     this._raffleID.clear()
     this._lotteryID.clear()
-    this._pklotteryID.clear()
     this._beatStormID.clear()
   }
   /**
@@ -196,35 +186,15 @@ class Listener extends EventEmitter {
    * @param {string} protocol
    * @memberof Listener
    */
-  private _RoomListener() {
-    const { 0: server, 1: protocol } = Options._.advConfig.serverURL.split('#')
-    if (server !== undefined && protocol !== undefined) {
-      this._MainWSServer = new Client(server, protocol)
-      this._MainWSServer.Connect()
-      tools.Log(`已连接到 ${Options._.advConfig.serverURL}`)
-    }
-    Options.on('clientUpdate', () => this._MainWSServer.Update(Options._.advConfig.serverURL))
+  private _RoomListener(server: string, protocol: string) {
+    const client = new Client(server, protocol)
+    client.Connect()
   }
   /**
-   * 房间监听(备用线路)
+   * 检查房间抽奖raffle信息
    *
    * @private
-   * @memberof Listener
-   */
-  private _BAKRoomListener() {
-    const { 0: server, 1: protocol } = Options._.advConfig.bakServerURL.split('#')
-    if (server !== undefined && protocol !== undefined) {
-      this._BackupWSServer = new Client(server, protocol)
-      this._BackupWSServer.Connect()
-      tools.Log(`已连接到备用服务器 ${Options._.advConfig.bakServerURL}`)
-    }
-    Options.on('bakClientUpdate', () => this._BackupWSServer.Update(Options._.advConfig.bakServerURL))
-  }
-  /**
-   * 本地监听房间消息
-   *
-   * @private
-   * @param {(SYS_MSG | SYS_GIFT)} dataJson
+   * @param {NOTICE_MSG} dataJson
    * @memberof Listener
    */
   private async _RaffleCheck(dataJson: NOTICE_MSG) {
@@ -232,10 +202,10 @@ class Listener extends EventEmitter {
     this._MSGCache.add(dataJson.msg_common)
     const roomID = dataJson.real_roomid
     // 等待3s, 防止土豪刷屏
-    await tools.Sleep(3 * 1000)
+    await tools.Sleep(3000)
     const _lotteryInfo: XHRoptions = {
-      uri: `${apiLiveOrigin}/xlive/lottery-interface/v1/lottery/getLotteryInfo?${AppClient.signQueryBase(`roomid=${roomID}`)}`,
-      json: true
+      url: `${apiLiveOrigin}/xlive/lottery-interface/v1/lottery/getLotteryInfo?${AppClient.signQueryBase(`roomid=${roomID}`)}`,
+      responseType: 'json',
     }
     const lotteryInfo = await tools.XHR<lotteryInfo>(_lotteryInfo, 'Android')
     if (lotteryInfo !== undefined && lotteryInfo.response.statusCode === 200
@@ -261,7 +231,7 @@ class Listener extends EventEmitter {
    * 监听抽奖消息
    *
    * @private
-   * @param {raffleMessage | lotteryMessage | beatStormMessage} raffleMessage
+   * @param {raffleMessage | lotteryMessage | beatStormMessage | anchorLotMessage | boxActivityMessage} raffleMessage
    * @memberof Listener
    */
   private _RaffleHandler(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage | anchorLotMessage | boxActivityMessage) {
@@ -275,15 +245,15 @@ class Listener extends EventEmitter {
         if (this._lotteryID.has(id)) return
         this._lotteryID.add(id)
         break
-      case 'beatStorm':
-        if (this._beatStormID.has(id)) return
-        this._beatStormID.add(id)
-        break
       case 'pklottery':
         if (this._pklotteryID.has(id)) return
         this._pklotteryID.add(id)
         break
-      case 'anchor':
+      case 'beatStorm':
+        if (this._beatStormID.has(id)) return
+        this._beatStormID.add(id)
+        break
+      case 'anchorLot':
         if (this._anchorLotID.has(id)) return
         this._anchorLotID.add(id)
         break
@@ -291,10 +261,12 @@ class Listener extends EventEmitter {
         if (this._boxActivityID.has(id)) return
         this._boxActivityID.add(id)
         break
-      default: return
+      default:
+        return
     }
     // 更新时间
     this._lastUpdate = Date.now()
+    this.clearAllID()
     this.emit(cmd, raffleMessage)
     tools.Log(`房间 ${Options.getShortRoomID(roomID)} 开启了第 ${id} 轮${title}`)
   }

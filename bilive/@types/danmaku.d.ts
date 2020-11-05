@@ -24,37 +24,6 @@ interface ACTIVITY_BANNER_CLOSE_Data {
   id: number
   banner_type: number
 }
-interface ANCHOR_LOT_START extends danmuJson {
-  data: ANCHOR_LOT_START_Data
-}
-interface ANCHOR_LOT_START_Data {
-  asset_icon: string
-  award_image: string
-  award_name: string
-  award_num: number
-  cur_gift_num: number
-  current_time: number
-  danmu: string
-  gift_id: number
-  gift_name: string
-  gift_num: number
-  gift_price: number
-  goaway_time: number
-  id: number
-  join_type: number
-  lot_status: number
-  max_time: number
-  require_text: string
-  require_type: number
-  require_value: number
-  room_id: number
-  send_gift_ensure: number
-  show_panel: number
-  status: number
-  time: number
-  url: string
-  web_url: string
-}
 /**
  * ACTIVITY_BANNER_RED_NOTICE
  * {"cmd":"ACTIVITY_BANNER_RED_NOTICE","data":{"id":297,"type":"revenue_banner","icon":"http://i0.hdslb.com/bfs/live/0e2d597a243774241bf7b0a57ce096aa7a1f1bb1.png"},"_roomid":6154037}
@@ -138,7 +107,44 @@ interface ACTIVITY_MATCH_GIFT_Data_Detail_Home_GiftInfo {
   gift_id: number
   gift_name: string
 }
-
+/**
+ * ANCHOR_LOT_START
+ * {"cmd":"ANCHOR_LOT_START","data":{"asset_icon":"https://i0.hdslb.com/bfs/live/992c2ccf88d3ea99620fb3a75e672e0abe850e9c.png","award_image":"","award_name":"2元红包","award_num":1,"cur_gift_num":0,"current_time":1586016065,"danmu":"咕咕咕","gift_id":0,"gift_name":"","gift_num":1,"gift_price":0,"goaway_time":180,"id":176301,"join_type":0,"lot_status":0,"max_time":600,"require_text":"关注主播","require_type":1,"require_value":0,"room_id":12594500,"send_gift_ensure":0,"show_panel":1,"status":1,"time":599,"url":"https://live.bilibili.com/p/html/live-lottery/anchor-join.html?is_live_half_webview=1&hybrid_biz=live-lottery-anchor&hybrid_half_ui=1,5,100p,100p,000000,0,30,0,0,1;2,5,100p,100p,000000,0,30,0,0,1;3,5,100p,100p,000000,0,30,0,0,1;4,5,100p,100p,000000,0,30,0,0,1;5,5,100p,100p,000000,0,30,0,0,1;6,5,100p,100p,000000,0,30,0,0,1;7,5,100p,100p,000000,0,30,0,0,1;8,5,100p,100p,000000,0,30,0,0,1","web_url":"https://live.bilibili.com/p/html/live-lottery/anchor-join.html"},"_roomid":12594500}
+ *
+ * @interface ANCHOR_LOT_START
+ * @extends {danmuJson}
+ */
+interface ANCHOR_LOT_START extends danmuJson {
+  data: ANCHOR_LOT_START_Data
+}
+interface ANCHOR_LOT_START_Data {
+  asset_icon: string
+  award_image: string
+  award_name: string
+  award_num: number
+  cur_gift_num: number
+  current_time: number
+  danmu: string
+  gift_id: number
+  gift_name: string
+  gift_num: number
+  gift_price: number
+  goaway_time: number
+  id: number
+  join_type: number
+  lot_status: number
+  max_time: number
+  require_text: string
+  require_type: number
+  require_value: number
+  room_id: number
+  send_gift_ensure: number
+  show_panel: number
+  status: number
+  time: number
+  url: string
+  web_url: string
+}
 /**
  * ANIMATION
  * {"cmd":"ANIMATION","data":{"animation":"https://i0.hdslb.com/bfs/live/6826d0dfa20cccedfbe6a70d6acaabaa816774a3.svga","type":"BOSS","weights":100,"uid":2352558},"_roomid":5441}
@@ -246,12 +252,34 @@ interface BOSS_INJURY_Data {
 /**
  * BOX_ACTIVITY_START
  * {"cmd":"BOX_ACTIVITY_START","aid":381,"_roomid":5440}
+ * {"cmd":"BOX_ACTIVITY_START","aid":519,"data":{"activity_id":519,"jump_url":"https://live.bilibili.com/p/html/live-app-treasurebox/index.html?is_live_half_webview=1&hybrid_biz=live-app-treasurebox&hybrid_rotate_d=1&hybrid_half_ui=1,3,100p,70p,0,0,30,100;2,2,375,100p,0,0,30,100;3,3,100p,70p,0,0,30,100;4,2,375,100p,0,0,30,100;5,3,100p,70p,0,0,30,100;6,3,100p,70p,0,0,30,100;7,3,100p,70p,0,0,30,100&aid=519","weight":20,"closeable":0,"title":"华为宝箱抽奖","title_color":"#FFFFFF","activity_pic":"https://i0.hdslb.com/bfs/live/c3ed87683f6e87d256d1f5fdddbfb220fc4c2cdf.png","background":"https://i0.hdslb.com/bfs/live/84cd59bcb1e977359df618dbeb0f7828751f457c.png","current_round":1,"typeB":[{"join_start_time":1586346000,"join_end_time":1586347200,"round_num":1},{"join_start_time":1586347800,"join_end_time":1586349000,"round_num":2},{"join_start_time":1586349600,"join_end_time":1586350800,"round_num":3},{"join_start_time":1586351400,"join_end_time":1586352600,"round_num":4},{"join_start_time":1586353200,"join_end_time":1586353800,"round_num":5}]},"_roomid":4089610}
  *
  * @interface BOX_ACTIVITY_START
  * @extends {danmuJson}
  */
 interface BOX_ACTIVITY_START extends danmuJson {
   aid: number
+}
+interface BOX_ACTIVITY_START extends danmuJson {
+  aid: number
+  data: BOX_ACTIVITY_START_Data
+}
+interface BOX_ACTIVITY_START_Data {
+  activity_id: number
+  jump_url: string
+  weight: number
+  closeable: number
+  title: string
+  title_color: string
+  activity_pic: string
+  background: string
+  current_round: number
+  typeB: BOX_ACTIVITY_START_Data_TypeB[]
+}
+interface BOX_ACTIVITY_START_Data_TypeB {
+  join_start_time: number
+  join_end_time: number
+  round_num: number
 }
 /**
  * 房间设置变更
@@ -838,7 +866,7 @@ interface PK_BATTLE_Base extends danmuJson {
  * 再次PK匹配
  * {"cmd":"PK_AGAIN","pk_id":8159,"pk_status":400,"data":{"new_pk_id":8179,"init_id":13566,"match_id":7326390,"escape_time":5,"is_portrait":true,"uname":"宇天学长","face":"http://i2.hdslb.com/bfs/face/488dda4a85251f9d0fd9ad82a733f874b5cec585.jpg","uid":261738266},"roomid":13566,"_roomid":13566}
  * {"cmd":"PK_AGAIN","pk_id":355519,"pk_status":400,"data":{"new_pk_id":355576,"init_id":21447960,"match_id":21435682,"escape_all_time":10,"escape_time":10,"is_portrait":true,"uname":"我回来的晚","face":"http://i1.hdslb.com/bfs/face/526dc5171e40ad29ae07e1157df1e34a6bbbc51c.jpg","uid":60261316},"_roomid":21447960}
- *
+ * 
  * @interface PK_AGAIN
  * @extends {PK_MIC_Base}
  */
@@ -1069,7 +1097,7 @@ interface PK_CLICK_AGAIN extends PK_MIC_Base { }
 /**
  * PK结束
  * {"cmd":"PK_END","pk_id":3291,"pk_status":400,"data":{"init_id":273022,"match_id":52320,"punish_topic":"惩罚：唱《九妹》"},"_roomid":273022}
- *
+ * 
  * @interface PK_END
  * @extends {PK_MIC_Base}
  */
@@ -1103,7 +1131,7 @@ interface PK_INVITE_CANCEL extends danmuJson {
 }
 /**
  * PK邀请失败
- * {"cmd":"PK_INVITE_FAIL","pk_invite_status":1100,"invite_id":28651,"_roomid":8531717}
+ * {"cmd":"PK_INVITE_FAIL","pk_invite_status":1100,"invite_id":28651,"_roomid":8531717} 
  *
  * @interface PK_INVITE_FAIL
  * @extends {danmuJson}
@@ -1492,7 +1520,7 @@ interface Room_Admin_Entrance extends danmuJson {
 /**
  * 管理员变更
  * {"cmd":"ROOM_ADMINS","uids":[21799502,324617099,37495809,280437450,25437575,61067789,20936602,28222739,901731,242150444,198506415,241374315,186912549,225688909,267471636,343632753,356529683,366057316,343623777,355195058,43578442,32429631,305349928,16722360,18037673,227478182,11258321,281388699,19033182,26062349,12820449,67176805,8535022,10122445,23488236,13453890,25815637,253966728,15689661,102630099,93423185,1560068,59151689,7153655,313867946,285087000,39529986,89557885,385052272,382836708,319250781,247950077,287219935,349628613,613749],"_roomid":3182251}
- *
+ * 
  * @interface ROOM_ADMINS
  * @extends {danmuJson}
  */
@@ -1674,7 +1702,7 @@ interface ROOM_REAL_TIME_MESSAGE_UPDATE_Data {
  * 房间屏蔽
  * {"cmd":"ROOM_SHIELD","type":0,"user":"","keyword":"","roomid":939654,"_roomid":939654}
  * {"cmd":"ROOM_SHIELD","type":1,"user":"","keyword":"","roomid":14073662,"_roomid":14073662}
- *
+ * 
  * @interface ROOM_SHIELD
  * @extends {danmuJson}
  */

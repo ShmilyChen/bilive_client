@@ -1,14 +1,9 @@
-import { B64XorCipher, modal } from './tools'
-
-declare const options: any
-declare const window: any
-
 /**
  * 与服务器进行通信并返回结果
  * 
  * @class Options
  */
-export class Options {
+class Options {
   constructor() {
     // 关闭窗口时断开连接
     window.onunload = () => { options.close() }
@@ -20,6 +15,17 @@ export class Options {
    * @memberof Options
    */
   private __callback: { [ts: string]: (message: any) => void } = {}
+  /**
+   * 加密相关
+   *
+   * @private
+   * @type {boolean}
+   * @memberof Options
+   */
+  private __crypto: boolean = false
+  private __algorithm!: string
+  private __sharedSecret!: CryptoKey
+  private __sharedSecretHex!: string
   /**
    * WebSocket客户端
    * 
@@ -55,13 +61,76 @@ export class Options {
       try {
         const ws = new WebSocket(path, protocols)
         const removeEvent = () => {
+          this.__crypto = false
+          // @ts-ignore
           delete ws.onopen
+          // @ts-ignore
           delete ws.onerror
         }
-        ws.onopen = () => {
+        ws.onopen = async () => {
           removeEvent()
           this._ws = ws
           this._init()
+          if (window.crypto.subtle !== undefined) {
+            const clientKey = await window.crypto.subtle.generateKey(
+              {
+                name: 'ECDH',
+                namedCurve: 'P-521'
+              },
+              false,
+              ['deriveKey', 'deriveBits']
+            )
+            const clientPublicKeyExported = await window.crypto.subtle.exportKey(
+              'raw', clientKey.publicKey
+            )
+            const clientPublicKeyHex = ECDH.buf2hex(new Uint8Array(clientPublicKeyExported))
+            const type = 'ECDH-AES-256-GCM'
+            const server = await this._send<message>({ cmd: 'hello', msg: type, data: clientPublicKeyHex })
+            if (server.msg === type) {
+              const serverPublicKeyHex = <string>server.data
+              const serverPublicKey = ECDH.hex2buf(serverPublicKeyHex)
+              const serverKeyImported = await window.crypto.subtle.importKey(
+                'raw',
+                serverPublicKey,
+                {
+                  name: 'ECDH',
+                  namedCurve: 'P-521'
+                },
+                false,
+                []
+              )
+              const sharedSecret = await window.crypto.subtle.deriveKey(
+                {
+                  name: 'ECDH',
+                  public: serverKeyImported
+                },
+                clientKey.privateKey,
+                {
+                  name: 'AES-GCM',
+                  length: 256
+                },
+                false,
+                ['encrypt', 'decrypt']
+              )
+              this.__crypto = true
+              this.__algorithm = type
+              this.__sharedSecret = sharedSecret
+            }
+          }
+          else {
+            const clientKey = ECDH.createECDH('secp521r1')
+            clientKey.generateKeys()
+            const clientPublicKeyHex = clientKey.getPublicKey()
+            const type = 'ECDH-AES-256-CBC'
+            const server = await this._send<message>({ cmd: 'hello', msg: type, data: clientPublicKeyHex })
+            if (server.msg === type) {
+              const serverPublicKeyHex = <string>server.data
+              const sharedSecretHex = clientKey.computeSecret(serverPublicKeyHex).slice(0, 64)
+              this.__crypto = true
+              this.__algorithm = type
+              this.__sharedSecretHex = CryptoJS.enc.Hex.parse(sharedSecretHex)
+            }
+          }
           resolve(true)
         }
         ws.onerror = error => {
@@ -93,29 +162,49 @@ export class Options {
       if (typeof this.onwsclose === 'function') this.onwsclose(data)
       else console.error(data)
     }
-    this._ws.onmessage = _data => {
-      const data = Object.assign({}, _data, { data: B64XorCipher.decode(window.netkey, _data.data) })
-      let message: message;
-      const modalOptions = {
-        onOk() {
-          window.location.reload()
-        },
-        onClose() {
-          window.location.reload()
+    this._ws.onmessage = async data => {
+      const Data: string | Blob | ArrayBuffer = data.data
+      let message: message
+      if (typeof Data === 'string') message = JSON.parse(Data)
+      else {
+        const msg = new Blob([Data])
+        if (this.__crypto) {
+          switch (this.__algorithm) {
+            case 'ECDH-AES-256-GCM': {
+              const aesdata = new Uint8Array(await msg.arrayBuffer())
+              const iv = aesdata.slice(0, 12)
+              const encrypted = aesdata.slice(12)
+              const decrypted = await window.crypto.subtle.decrypt(
+                {
+                  name: "AES-GCM",
+                  iv: iv
+                },
+                this.__sharedSecret,
+                encrypted
+              )
+              const decoder = new Blob([decrypted])
+              const decoded = await decoder.text()
+              message = JSON.parse(decoded)
+            }
+              break
+            case 'ECDH-AES-256-CBC': {
+              const aesdata = new Uint8Array(await msg.arrayBuffer())
+              const ivHex = CryptoJS.enc.Hex.parse(ECDH.buf2hex(aesdata.slice(0, 16)))
+              const encryptedHex = CryptoJS.enc.Hex.parse(ECDH.buf2hex(aesdata.slice(16)))
+              const encryptedBase64 = CryptoJS.enc.Base64.stringify(encryptedHex)
+              const decrypted = CryptoJS.AES.decrypt(encryptedBase64, this.__sharedSecretHex, {
+                iv: ivHex
+              })
+              const decoded = decrypted.toString(CryptoJS.enc.Utf8)
+              message = JSON.parse(decoded)
+            }
+              break
+            default:
+              message = { cmd: 'log', ts: 'log', msg: '未知加密格式' }
+              break
+          }
         }
-      }
-      try {
-        message = JSON.parse(data.data)
-      } catch (err) {
-        console.log(err)
-        if (window.newNetkey) {
-          window.netkey = window.newNetkey
-          window.newNetkey = null
-        } else {
-          modal(Object.assign({ body: '密钥错误，请重新输入!' }, modalOptions))
-        }
-        const data = Object.assign({}, _data, { data: B64XorCipher.decode(window.netkey, _data.data) })
-        message = JSON.parse(data.data)
+        else message = JSON.parse(await msg.text())
       }
 
       const ts = message.ts
@@ -139,7 +228,7 @@ export class Options {
    * @memberof Options
    */
   protected _send<T>(message: message): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
+    return new Promise<T>(async (resolve, reject) => {
       const timeout = setTimeout(() => {
         reject('timeout')
       }, 30 * 1000) // 30秒
@@ -150,7 +239,41 @@ export class Options {
         resolve(msg)
       }
       const msg = JSON.stringify(message)
-      if (this._ws.readyState === WebSocket.OPEN) this._ws.send(B64XorCipher.encode(window.netkey, msg))
+      if (this._ws.readyState === WebSocket.OPEN) {
+        if (this.__crypto) {
+          switch (this.__algorithm) {
+            case 'ECDH-AES-256-GCM': {
+              const iv = window.crypto.getRandomValues(new Uint8Array(12))
+              const encoder = new Blob([msg])
+              const encoded = await encoder.arrayBuffer()
+              const encrypted = await window.crypto.subtle.encrypt(
+                {
+                  name: "AES-GCM",
+                  iv: iv
+                },
+                this.__sharedSecret,
+                encoded
+              )
+              const aesdata = new Uint8Array([...iv, ...new Uint8Array(encrypted)])
+              this._ws.send(aesdata)
+            }
+              break
+            case 'ECDH-AES-256-CBC': {
+              const ivHex = CryptoJS.enc.Hex.parse(ECDH.randomBytes(16))
+              const encrypted = CryptoJS.AES.encrypt(msg, this.__sharedSecretHex, {
+                iv: ivHex
+              })
+              const aesdataHex = ivHex + encrypted.ciphertext
+              const aesdata = ECDH.hex2buf(aesdataHex)
+              this._ws.send(aesdata)
+            }
+              break
+            default:
+              break
+          }
+        }
+        else this._ws.send(msg)
+      }
       else reject('closed')
     })
   }
@@ -219,38 +342,6 @@ export class Options {
     return this._send<configMSG>(message)
   }
   /**
-   * 获取高级设置
-   * 
-   * @returns {Promise<configMSG>} 
-   * @memberof Options
-   */
-  public getAdvConfig(): Promise<configMSG> {
-    const message = { cmd: 'getAdvConfig' }
-    return this._send<configMSG>(message)
-  }
-  /**
-   * 保存高级设置
-   * 
-   * @param {config} data 
-   * @returns {Promise<configMSG>} 
-   * @memberof Options
-   */
-  public setAdvConfig(data: config): Promise<configMSG> {
-    const message = { cmd: 'setAdvConfig', data }
-    return this._send<configMSG>(message)
-  }
-  /**
-   * 修改密钥
-   * 
-   * @param {config} data 
-   * @returns {Promise<configMSG>} 
-   * @memberof Options
-   */
-  public setNewNetKey(data: config): Promise<configMSG> {
-    const message = { cmd: 'setNewNetkey', data }
-    return this._send<configMSG>(message)
-  }
-  /**
    * 获取设置描述
    * 
    * @returns {Promise<infoMSG>} 
@@ -286,15 +377,14 @@ export class Options {
    *
    * @param {string} uid
    * @param {userData} data
-   * @param {string} [captcha]
    * @param {string} [validate]
    * @param {string} [authcode]
    * @returns {Promise<userDataMSG>}
    * @memberof Options
    */
-  public setUserData(uid: string, data: userData, captcha?: string, validate?: string, authcode?: string): Promise<userDataMSG> {  const message: userDataMSG = { cmd: 'setUserData', uid, data }
-    if (captcha !== undefined) message.captcha = captcha
-    else if (validate !== undefined) message.validate = validate
+  public setUserData(uid: string, data: userData, validate?: string, authcode?: string): Promise<userDataMSG> {
+    const message: userDataMSG = { cmd: 'setUserData', uid, data }
+    if (validate !== undefined) message.validate = validate
     else if (authcode !== undefined) message.authcode = authcode
     return this._send<userDataMSG>(message)
   }
@@ -318,38 +408,5 @@ export class Options {
   public newUserData(): Promise<userDataMSG> {
     const message = { cmd: 'newUserData' }
     return this._send<userDataMSG>(message)
-  }
-  /**
-   * 获取utilID
-   * 
-   * @returns {Promise<any>} 
-   * @memberof Options
-   */
-  public getAllUtilID(): Promise<any> {
-    const message = { cmd: 'getAllUtilID' }
-    return this._send<any>(message)
-  }
-  /**
-   * 获取util功能（前端界面参数）
-   * 
-   * @param {string} utilID 
-   * @returns {Promise<any>} 
-   * @memberof Options
-   */
-  public getUtil(utilID: string): Promise<any> {
-    const message = { cmd: 'getUtilData', utilID }
-    return this._send<any>(message)
-  }
-  /**
-   * util发送数据至ws服务器
-   * 
-   * @param {string} utilID
-   * @param {utilData} utilData 
-   * @returns {Promise<any>} 
-   * @memberof Options
-   */
-  public sendUtil(utilID: string, utilData: utilData): Promise<utilMSG> {
-    const message = { cmd: 'utilMSG', utilID, data: utilData }
-    return this._send<utilMSG>(message)
   }
 }

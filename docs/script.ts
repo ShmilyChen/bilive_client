@@ -1,26 +1,14 @@
-import { Options } from './options'
-import { modal } from './tools'
-
 const options = new Options()
 let optionsInfo: optionsInfo
 const dDiv = <HTMLDivElement>document.querySelector('#ddd')
 const loginDiv = <HTMLDivElement>document.querySelector('#login')
 const optionDiv = <HTMLDivElement>document.querySelector('#option')
-const advOptionDiv = <HTMLDivElement>document.querySelector('#advOption')
 const configDiv = <HTMLDivElement>document.querySelector('#config')
-const advConfigDiv = <HTMLDivElement>document.querySelector('#advConfig')
-const utilDiv = <HTMLDivElement>document.querySelector('#util')
 const userDiv = <HTMLDivElement>document.querySelector('#user')
 const logDiv = <HTMLDivElement>document.querySelector('#log')
-const changeNetkeyDiv = <HTMLDivElement>document.querySelector('#changeNetkey')
-const advOptionReturnButton = <HTMLElement>document.querySelector('#optionReturn')
-const netkeyReturnButton = <HTMLElement>document.querySelector('#netkeyReturn')
 const returnButton = <HTMLElement>document.querySelector('#logreturn')
+const modalDiv = <HTMLDivElement>document.querySelector('.modal')
 const template = <HTMLDivElement>document.querySelector('#template')
-
-declare const window: any
-$('[data-toggle="tooltip"]').tooltip()
-
 // 3D效果
 let firstDiv: HTMLDivElement = loginDiv
 let secondDiv: HTMLDivElement
@@ -50,12 +38,11 @@ dDiv.addEventListener('animationend', () => {
 })
 /**
  * 显示登录界面
- *
+ * 
  */
 function showLogin() {
   const pathInput = <HTMLInputElement>loginDiv.querySelector('#path input')
   const protocolInput = <HTMLInputElement>loginDiv.querySelector('#protocol input[type="text"]')
-  const netkeyInput = <HTMLInputElement>loginDiv.querySelector('#netkey input[name="netkey"]')
   const connectButton = <HTMLElement>loginDiv.querySelector('#connect button')
   const connectSpan = <HTMLSpanElement>loginDiv.querySelector('#connect span')
   if (location.hash !== '') {
@@ -63,19 +50,10 @@ function showLogin() {
     if (loginInfo !== null) {
       pathInput.value = loginInfo[1]
       protocolInput.value = loginInfo[2]
-    } else {
-      pathInput.value = localStorage.getItem('path') || pathInput.value
-      protocolInput.value = localStorage.getItem('protocol') || protocolInput.value
     }
-  } else {
-    pathInput.value = localStorage.getItem('path') || pathInput.value
-    protocolInput.value = localStorage.getItem('protocol') || protocolInput.value
   }
   connectButton.onclick = async () => {
     const protocols = [protocolInput.value]
-    localStorage.setItem('path', pathInput.value)
-    localStorage.setItem('protocol', protocolInput.value)
-    window.netkey = netkeyInput.value
     const connected = await options.connect(pathInput.value, protocols)
     if (connected) login()
     else connectSpan.innerText = '连接失败'
@@ -84,7 +62,7 @@ function showLogin() {
 }
 /**
  * 登录成功
- *
+ * 
  */
 async function login() {
   const infoMSG = await options.getInfo()
@@ -104,22 +82,17 @@ async function login() {
   }
   danimation(optionDiv)
   await showConfig()
-  await showAdvOption()
   await showUser()
-  await showUtil()
   showLog()
-  showChangeNetkey()
 }
 /**
  * 加载全局设置
- *
+ * 
  */
 async function showConfig() {
   const saveConfigButton = <HTMLElement>document.querySelector('#saveConfig')
   const addUserButton = <HTMLElement>document.querySelector('#addUser')
-  const showAdvButton = <HTMLElement>document.querySelector('#showAdvOption')
   const showLogButton = <HTMLElement>document.querySelector('#showLog')
-  const showChangeNetkeyButton = <HTMLElement>document.querySelector('#showChangeNetkey')
   const configMSG = await options.getConfig()
   let config = configMSG.data
   const configDF = getConfigTemplate(config)
@@ -147,75 +120,14 @@ async function showConfig() {
     modal({ body: '添加成功' })
   }
   // 显示日志
-  showAdvButton.onclick = () => {
-    danimation(advOptionDiv)
-  }
-  // 显示日志
   showLogButton.onclick = () => {
     danimation(logDiv)
-  }
-  // 显示密钥修改
-  showChangeNetkeyButton.onclick = () => {
-    danimation(changeNetkeyDiv)
   }
   configDiv.appendChild(configDF)
 }
 /**
- * 加载高级设置
- *
- */
-async function showAdvOption() {
-  const saveAdvConfigButton = <HTMLElement>document.querySelector('#saveAdvConfig')
-  const configMSG = await options.getAdvConfig()
-  let config = configMSG.data
-  const advConfigDF = getConfigTemplate(config)
-  // 保存高级设置
-  saveAdvConfigButton.onclick = async () => {
-    modal()
-    const configMSG = await options.setAdvConfig(config)
-    if (configMSG.msg != null) modal({ body: configMSG.msg })
-    else {
-      config = configMSG.data
-      const advConfigDF = getConfigTemplate(config)
-      advConfigDiv.innerText = ''
-      advConfigDiv.appendChild(advConfigDF)
-      modal({ body: '保存成功' })
-    }
-  }
-  advOptionReturnButton.onclick = () => {
-    danimation(optionDiv)
-  }
-  advConfigDiv.appendChild(advConfigDF)
-}
-/**
- * 修改密钥
- *
- */
-async function showChangeNetkey() {
-  const saveNewNetkeyButton = <HTMLElement>document.querySelector('#saveNewNetkey')
-  const newNetkey1Input = <HTMLInputElement>document.querySelector('input[name="newNetkey1"]')
-  const newNetkey2Input = <HTMLInputElement>document.querySelector('input[name="newNetkey2"]')
-  // 保存高级设置
-  saveNewNetkeyButton.onclick = async () => {
-    modal()
-    if (newNetkey1Input.value === newNetkey2Input.value) {
-      window.newNetkey = newNetkey1Input.value
-      await options.setNewNetKey({ netkey: window.newNetkey })
-      newNetkey1Input.value = ''
-      newNetkey2Input.value = ''
-      modal({ body: '修改成功！' })
-    } else {
-      modal({ body: '两次输入的密钥请保持一致！' })
-    }
-
-  }
-  netkeyReturnButton.onclick = () => {
-    danimation(optionDiv)
-  }
-}
-/**
  * 加载Log
- *
+ * 
  */
 async function showLog() {
   const logMSG = await options.getLog()
@@ -230,6 +142,7 @@ async function showLog() {
     const div = document.createElement('div')
     div.innerHTML = data.replace(/房间 (\d+) /, '房间 <a href="https://live.bilibili.com/$1" target="_blank" rel="noreferrer">$1</a> ')
     logDiv.appendChild(div)
+    if (logDiv.childElementCount > 500) logDiv.firstElementChild?.remove()
     if (logDiv.scrollHeight - logDiv.clientHeight - logDiv.scrollTop < 2 * div.offsetHeight) logDiv.scrollTop = logDiv.scrollHeight
   }
   returnButton.onclick = () => {
@@ -239,7 +152,7 @@ async function showLog() {
 }
 /**
  * 加载用户设置
- *
+ * 
  */
 async function showUser() {
   const userMSG = await options.getAllUID()
@@ -254,28 +167,11 @@ async function showUser() {
   userDiv.appendChild(df)
 }
 /**
- * 加载额外功能
- *
- */
-async function showUtil() {
-  const utilMSG = await options.getAllUtilID()
-  if (utilMSG.msg === '未知命令') return
-  const utilArray = utilMSG.data
-  const df = document.createDocumentFragment()
-  for (const utilID of utilArray) {
-    const utilMSG = await options.getUtil(utilID)
-    const utilData = utilMSG.data
-    const utilDF = getUtilDF(utilID, utilData)
-    df.appendChild(utilDF)
-  }
-  utilDiv.appendChild(df)
-}
-/**
  * 新建用户模板
- *
- * @param {string} uid
- * @param {userData} userData
- * @returns {DocumentFragment}
+ * 
+ * @param {string} uid 
+ * @param {userData} userData 
+ * @returns {DocumentFragment} 
  */
 function getUserDF(uid: string, userData: userData): DocumentFragment {
   const userTemplate = <HTMLTemplateElement>template.querySelector('#userTemplate')
@@ -287,13 +183,11 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
   const userConfigDF = getConfigTemplate(userData)
   userConfigDiv.appendChild(userConfigDF)
   // 保存用户设置
-  let captcha: string | undefined = undefined
   let validate: string | undefined = undefined
   let authcode: string | undefined = undefined
   saveUserButton.onclick = async () => {
     modal()
-    const userDataMSG = await options.setUserData(uid, userData, captcha, validate, authcode)
-    captcha = undefined
+    const userDataMSG = await options.setUserData(uid, userData, validate, authcode)
     validate = undefined
     authcode = undefined
     if (userDataMSG.msg == null) {
@@ -303,31 +197,49 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
       userConfigDiv.innerText = ''
       userConfigDiv.appendChild(userConfigDF)
     }
-    else if (userDataMSG.msg === 'captcha' && userDataMSG.captcha != null) {
-      const captchaTemplate = <HTMLTemplateElement>template.querySelector('#captchaTemplate')
-      const clone = document.importNode(captchaTemplate.content, true)
-      const captchaImg = <HTMLImageElement>clone.querySelector('img')
-      const captchaInput = <HTMLInputElement>clone.querySelector('input')
-      captchaImg.src = userDataMSG.captcha
-      modal({
-        body: clone,
-        showOK: true,
-        onOK: () => {
-          captcha = captchaInput.value
-          saveUserButton.click()
-        }
-      })
+    else if (userDataMSG.msg === 'validate' && userDataMSG.validate != null) {
+      const verificationUrl = userDataMSG.validate.match(/gt=(\w*)&challenge=(\w*)/)
+      if (verificationUrl !== null) {
+        const [, gt, challenge] = verificationUrl
+        const validateTemplate = <HTMLTemplateElement>template.querySelector('#validateTemplate')
+        const clone = document.importNode(validateTemplate.content, true)
+        const validateBox = <HTMLImageElement>clone.querySelector('.validate')
+        let geetestObj: geetestValidate
+        initGeetest({
+          gt,
+          challenge,
+          offline: false,
+          new_captcha: false,
+          https: true,
+          product: 'float',
+          width: '100%'
+        },
+          validateObj => {
+            validateObj.appendTo(validateBox)
+            validateObj.onSuccess(() => geetestObj = validateObj)
+          })
+        modal({
+          body: clone,
+          showOK: true,
+          onOK: () => {
+            const result = geetestObj.getValidate()
+            validate = result.geetest_validate
+            validate = `${result.geetest_validate}&challenge=${result.geetest_challenge}&seccode=${encodeURIComponent(result.geetest_seccode)}`
+            // geetestObj.destroy()
+            saveUserButton.click()
+          }
+        })
+      }
     }
     else if (userDataMSG.msg === 'authcode' && userDataMSG.authcode != null) {
-      const captchaTemplate = <HTMLTemplateElement>template.querySelector('#captchaTemplate')
-      const clone = document.importNode(captchaTemplate.content, true)
-      const captchaImg = <HTMLImageElement>clone.querySelector('img')
-      const captchaInput = <HTMLInputElement>clone.querySelector('input')
-      captchaInput.remove()
+      const authcodeTemplate = <HTMLTemplateElement>template.querySelector('#authcodeTemplate')
+      const clone = document.importNode(authcodeTemplate.content, true)
+      const authcodeImg = <HTMLImageElement>clone.querySelector('.authcode')
+      // 绘制二维码
       const qr = qrcode(6, 'L')
       qr.addData(userDataMSG.authcode)
       qr.make()
-      captchaImg.src = qr.createDataURL(4)
+      authcodeImg.src = qr.createDataURL(4)
       modal({
         body: clone,
         showOK: true,
@@ -352,32 +264,10 @@ function getUserDF(uid: string, userData: userData): DocumentFragment {
   return clone
 }
 /**
- * 新建功能插件模板
- *
- * @param {string} utilID
- * @param {utilData} utilData
- * @returns {DocumentFragment}
- */
-function getUtilDF(utilID: string, utilData: utilData): DocumentFragment {
-  const utilTemplate = <HTMLTemplateElement>template.querySelector('#utilTemplate')
-  const clone = document.importNode(utilTemplate.content, true)
-  const utilConfigDiv = <HTMLDivElement>clone.querySelector('.utilConfigClass')
-  const utilPostButton = <HTMLElement>clone.querySelector('.utilPost')
-  const userConfigDF = getUtilConfigTemplate(utilData)
-  utilConfigDiv.appendChild(userConfigDF)
-  // 前端功能插件 数据提交
-  utilPostButton.onclick = async () => {
-    modal()
-    const sendUtilCallback = await options.sendUtil(utilID, utilData)
-    if (sendUtilCallback.msg !== undefined) modal({ body: sendUtilCallback.msg })
-  }
-  return clone
-}
-/**
  * 设置模板
- *
- * @param {(config | userData)} config
- * @returns {DocumentFragment}
+ * 
+ * @param {(config | userData)} config 
+ * @returns {DocumentFragment} 
  */
 function getConfigTemplate(config: config | userData): DocumentFragment {
   const df = document.createDocumentFragment()
@@ -424,72 +314,56 @@ function getConfigTemplate(config: config | userData): DocumentFragment {
   return df
 }
 /**
- * 设置util模板
- *
- * @param {utilData} utilData
- * @returns {DocumentFragment}
- */
-function getUtilConfigTemplate(utilData: utilData): DocumentFragment {
-  const df = document.createDocumentFragment()
-  for (const key in utilData) {
-    const info = utilData[key].info
-    const itemValue = utilData[key].value
-    let configTemplate: HTMLTemplateElement
-    if (info.type === 'boolean') configTemplate = <HTMLTemplateElement>template.querySelector('#configCheckboxTemplate')
-    else if (info.type === 'user') configTemplate = <HTMLTemplateElement>template.querySelector('#utilUserListTemplate')
-    else configTemplate = <HTMLTemplateElement>template.querySelector('#configTextTemplate')
-    const clone = document.importNode(configTemplate.content, true)
-    const descriptionDiv = <HTMLDivElement>clone.querySelector('._description')
-    const inputInput = <HTMLInputElement>clone.querySelector('.form-control')
-    const checkboxInput = <HTMLInputElement>clone.querySelector('.form-check-input')
-    switch (info.type) {
-      case 'number':
-        inputInput.value = (<number>itemValue).toString()
-        inputInput.oninput = () => utilData[key].value = parseInt(inputInput.value)
-        break
-      case 'string':
-        inputInput.value = <string>itemValue
-        inputInput.oninput = () => utilData[key].value = inputInput.value
-        break
-      case 'boolean':
-        checkboxInput.checked = <boolean>itemValue
-        checkboxInput.onchange = () => utilData[key].value = checkboxInput.checked
-        break
-      case 'user':
-        for (let i = 0; i < (<string[]>utilData[key].list).length; i++) {
-          let option = document.createElement("option")
-          const userStr = (<string[]>utilData[key].list)[i]
-          option.setAttribute("label", userStr)
-          option.setAttribute("value", userStr)
-          inputInput.appendChild(option)
-        }
-        inputInput.value = <string>itemValue
-        inputInput.onchange = () => utilData[key].value = inputInput.value
-        break
-      default:
-        break
-    }
-    descriptionDiv.innerText = info.description
-    descriptionDiv.title = info.tip
-    $(descriptionDiv).tooltip()
-    df.appendChild(clone)
-  }
-  return df
-}
-/**
  * 处理连接中断
- *
- * @param {string} data
+ * 
+ * @param {string} data 
  */
 function wsClose(data: string) {
   const connectSpan = <HTMLSpanElement>loginDiv.querySelector('#connect span')
   configDiv.innerText = ''
-  advConfigDiv.innerHTML = ''
   logDiv.innerText = ''
   userDiv.innerText = ''
-  utilDiv.innerText = ''
   connectSpan.innerText = data
   danimation(loginDiv)
 }
-
+/**
+ * 弹窗提示
+ * 无参数时只显示遮罩
+ * 
+ * @param {modalOPtions} [options] 
+ */
+function modal(options?: modalOPtions) {
+  if (options != null) {
+    const modalDialogDiv = <HTMLDivElement>modalDiv.querySelector('.modal-dialog')
+    const modalTemplate = <HTMLTemplateElement>template.querySelector('#modalContentTemplate')
+    const clone = document.importNode(modalTemplate.content, true)
+    const headerTitle = <HTMLHeadingElement>clone.querySelector('.modal-header .modal-title')
+    const headerClose = <HTMLElement>clone.querySelector('.modal-header .close')
+    const modalBody = <HTMLDivElement>clone.querySelector('.modal-body')
+    const footerClose = <HTMLElement>clone.querySelector('.modal-footer .btn-secondary')
+    const footerOK = <HTMLElement>clone.querySelector('.modal-footer .btn-primary')
+    headerClose.onclick = footerClose.onclick = () => {
+      $(modalDiv).one('hidden.bs.modal', () => {
+        modalDialogDiv.innerText = ''
+        if (typeof options.onClose === 'function') options.onClose(options.body)
+      })
+      $(modalDiv).modal('hide')
+    }
+    footerOK.onclick = () => {
+      $(modalDiv).one('hidden.bs.modal', () => {
+        modalDialogDiv.innerText = ''
+        if (typeof options.onOK === 'function') options.onOK(options.body)
+      })
+      $(modalDiv).modal('hide')
+    }
+    if (options.body instanceof DocumentFragment) modalBody.appendChild(options.body)
+    else modalBody.innerText = options.body
+    if (options.title != null) headerTitle.innerText = options.title
+    if (options.close != null) footerClose.innerText = options.close
+    if (options.ok != null) footerOK.innerText = options.ok
+    if (options.showOK) footerOK.classList.remove('d-none')
+    modalDialogDiv.appendChild(clone)
+  }
+  $(modalDiv).modal({ backdrop: 'static', keyboard: false })
+}
 showLogin()

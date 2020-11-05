@@ -7,41 +7,27 @@
  * @interface options
  */
 interface options {
-  [index: string]: any
   server: server
   config: config
-  advConfig: advConfig
   user: userCollection
-  util: utilCollection
   newUserData: userData
   info: optionsInfo
   roomList: [number, number][]
 }
 interface server {
-  [index: string]: number | string
   path: string
   hostname: string
   port: number
   protocol: string
-  netkey: string
 }
 interface config {
-  [index: string]: boolean | number | number[] | string | string[]
-  localListener: boolean
-}
-
-interface advConfig {
-  [index: string]: boolean | number | string | number[] | string[]
-  defaultUserID: number
+  [x: string]: boolean | number | number[] | string | string[]
   serverURL: string
   bakServerURL: string
-  eventRooms: number[]
 }
-interface userCollection {
-  [index: string]: userData
-}
+type userCollection = Record<string, userData>
 interface userData {
-  [index: string]: boolean | number | number[] | string | string[]
+  [x: string]: boolean | number | number[] | string | string[]
   nickname: string
   userName: string
   passWord: string
@@ -51,38 +37,15 @@ interface userData {
   cookie: string
   status: boolean
 }
-interface utilCollection {
-  [index: string]: utilData
-}
-interface utilData {
-  [index: string]: utilDataItem
-}
-interface utilDataItem {
-  value: string | boolean | number
-  list?: string[]
-  info: configInfoData
-}
-interface optionsInfo {
-  [index: string]: configInfoData
-  localListener: configInfoData
-  defaultUserID: configInfoData
-  serverURL: configInfoData
-  eventRooms: configInfoData
-  adminServerChan: configInfoData
-  nickname: configInfoData
-  userName: configInfoData
-  passWord: configInfoData
-  biliUID: configInfoData
-  accessToken: configInfoData
-  refreshToken: configInfoData
-  cookie: configInfoData
-  status: configInfoData
+type optionsInfo = {
+  [x in keyof (config & userData)]: configInfoData
 }
 interface configInfoData {
   description: string
   tip: string
-  type: 'boolean' | 'number' | 'numberArray' | 'string' | 'stringArray' | string
+  type: string
   cognate?: string
+  password?: boolean
 }
 /*******************
  ****** User ******
@@ -94,18 +57,20 @@ type User = import('../online').default
 declare enum dmErrorStatus {
   'client' = 0,
   'danmaku' = 1,
-  'timeout' = 2
+  'timeout' = 2,
+  'http' = 3,
+  'auth' = 4,
 }
 interface DMclientOptions {
   roomID?: number
-  userID?: number
   protocol?: DMclientProtocol
-  key?: string
+  userID?: number
+  token?: string
 }
 type DMclientProtocol = 'socket' | 'flash' | 'ws' | 'wss'
 type DMerror = DMclientError | DMdanmakuError
 interface DMclientError {
-  status: dmErrorStatus.client | dmErrorStatus.timeout
+  status: dmErrorStatus.client | dmErrorStatus.timeout | dmErrorStatus.http | dmErrorStatus.auth
   error: Error
 }
 interface DMdanmakuError {
@@ -145,9 +110,8 @@ declare enum appStatus {
   'success' = 0,
   'error' = 1,
   'httpError' = 2,
-  'captcha' = 3,
-  'validate' = 4,
-  'authcode' = 5,
+  'validate' = 3,
+  'authcode' = 4,
 }
 /**
  * 公钥返回
@@ -211,13 +175,13 @@ interface revokeResponse {
 /**
  * 登录返回信息
  */
-type loginResponse = loginResponseSuccess | loginResponseCaptcha | loginResponseError | loginResponseHttp
+type loginResponse = loginResponseSuccess | loginResponseValidate | loginResponseError | loginResponseHttp
 interface loginResponseSuccess {
   status: appStatus.success
   data: authResponse
 }
-interface loginResponseCaptcha {
-  status: appStatus.captcha | appStatus.validate | appStatus.authcode
+interface loginResponseValidate {
+  status: appStatus.validate | appStatus.authcode
   data: authResponse
 }
 interface loginResponseError {
@@ -243,18 +207,6 @@ interface revokeResponseError {
 interface revokeResponseHttp {
   status: appStatus.httpError
   data: XHRresponse<revokeResponse> | undefined
-}
-/**
- * 验证码返回信息
- */
-type captchaResponse = captchaResponseSuccess | captchaResponseError
-interface captchaResponseSuccess {
-  status: appStatus.success
-  data: Buffer
-}
-interface captchaResponseError {
-  status: appStatus.error
-  data: XHRresponse<Buffer> | undefined
 }
 /**
  * 二维码返回
@@ -292,27 +244,10 @@ interface qrcodeResponseHttp {
  *******************/
 /**
  * XHR设置
- * 因为request已经为Deprecated状态, 为了兼容把设置项缩小, 可以会影响一些插件
  *
  * @interface XHRoptions
  */
-interface XHRoptions {
-  /** @deprecated 为了兼容request, 现在可以使用url */
-  uri?: string | URL
-  url?: string | URL
-  // OutgoingHttpHeaders包含number, 导致无法兼容got
-  headers?: import('http').IncomingHttpHeaders
-  method?: import('got').Method
-  body?: string | Buffer | import('stream').Readable | import('form-data')
-  /** @deprecated 为了兼容request, 现在可以使用cookieJar */
-  jar?: import('tough-cookie').CookieJar
-  cookieJar?: import('tough-cookie').CookieJar
-  /** 为了兼容request, 保留null */
-  encoding?: BufferEncoding | null
-  /** @deprecated 为了兼容request, 现在可以使用responseType */
-  json?: boolean
-  responseType?: 'json' | 'buffer' | 'text'
-}
+type XHRoptions = import('got').Options & { responseType?: 'json' | 'buffer' | 'text' }
 /**
  * XHR返回
  *
@@ -377,7 +312,6 @@ interface beatStormMessage {
   cmd: 'beatStorm'
   roomID: number
   id: number
-  num: number
   type: string
   title: string
   time: number
@@ -389,7 +323,7 @@ interface beatStormMessage {
  * @interface anchorLotMessage
  */
 interface anchorLotMessage {
-  cmd: 'anchor'
+  cmd: 'anchorLot'
   roomID: number
   id: number
   title: string
@@ -405,7 +339,7 @@ interface boxActivityMessage {
   roomID: number
   id: number
   title: string
-  raw?: '' | BOX_ACTIVITY_START
+  raw: '' | BOX_ACTIVITY_START
 }
 /**
  * 消息格式
@@ -420,6 +354,86 @@ type message = raffleMessage | lotteryMessage | beatStormMessage | anchorLotMess
 /*******************
  **** listener *****
  *******************/
+/**
+ * 统一抽奖信息
+ *
+ * @interface lotteryInfo
+ */
+interface lotteryInfo {
+  code: number
+  message: string
+  ttl: number
+  data: lotteryInfoData
+}
+interface lotteryInfoData {
+  activity_box: null
+  bls_box: null
+  gift_list: lotteryInfoDataGiftList[]
+  guard: lotteryInfoDataGuard[]
+  pk: lotteryInfoDataPk[]
+  slive_box: lotteryInfoDataSliveBox
+  storm: lotteryInfoDataStorm
+}
+interface lotteryInfoDataGiftList {
+  raffleId: number
+  title: string
+  type: string
+  payflow_id: number
+  from_user: lotteryInfoDataGiftListFromUser
+  time_wait: number
+  time: number
+  max_time: number
+  status: number
+  asset_animation_pic: string
+  asset_tips_pic: string
+  sender_type: number
+}
+interface lotteryInfoDataGiftListFromUser {
+  uname: string
+  face: string
+}
+interface lotteryInfoDataGuard {
+  id: number
+  sender: lotteryInfoDataGuardSender
+  keyword: string
+  privilege_type: number
+  time: number
+  status: number
+  payflow_id: string
+}
+interface lotteryInfoDataGuardSender {
+  uid: number
+  uname: string
+  face: string
+}
+interface lotteryInfoDataPk {
+  id: number
+  pk_id: number
+  room_id: number
+  time: number
+  status: number
+  asset_icon: string
+  asset_animation_pic: string
+  title: string
+  max_time: number
+}
+interface lotteryInfoDataSliveBox {
+  minute: number
+  silver: number
+  time_end: number
+  time_start: number
+  times: number
+  max_times: number
+  status: number
+}
+interface lotteryInfoDataStorm {
+  id: number
+  num: number
+  time: number
+  content: string
+  hadJoin: number
+  storm_gif: string
+}
 /**
  * 获取直播列表
  *
@@ -484,152 +498,6 @@ interface getAllListDataRoomList {
   rec_type: number
   pk_id: number
 }
-/**
- * 搜索总督房间
- *
- * @interface searchID
- */
-interface searchID {
-  code: number
-  data: searchID_Data
-  message: string
-  ttl: number
-}
-interface searchID_Data {
-  result: searchID_Data_Result
-}
-interface searchID_Data_Result {
-  live_user: searchID_Data_Result_User[]
-}
-interface searchID_Data_Result_User {
-  roomid: number
-  mid: number
-}
-/**
- * 统一抽奖信息
- *
- * @interface lotteryInfo
- */
-interface lotteryInfo {
-  code: number
-  ttl: number
-  data: lotteryInfoData
-}
-interface lotteryInfoData {
-  activity_box: null
-  bls_box: null
-  gift_list: lotteryInfoDataGiftList[]
-  guard: lotteryInfoDataGuard[]
-  pk: lotteryInfoDataPk[]
-  slive_box: lotteryInfoDataSilverBox
-  storm: lotteryInfoDataStorm
-}
-
-interface lotteryInfoDataGiftList {
-  raffleId: number
-  title: string
-  type: string
-  payflow_id: number
-  from_user: lotteryInfoDataGiftListFromUser
-  time_wait: number
-  time: number
-  max_time: number
-  status: number
-  asset_animation_pic: string
-  asset_tips_pic: string
-  sender_type: number
-}
-interface lotteryInfoDataGiftListFromUser {
-  uname: string
-  face: string
-}
-interface lotteryInfoDataGuard {
-  id: number
-  sender: lotteryInfoDataGuardSender
-  keyword: string
-  privilege_type: number
-  time: number
-  status: number
-  payflow_id: string
-}
-interface lotteryInfoDataGuardSender {
-  uid: number
-  uname: string
-  face: string
-}
-interface lotteryInfoDataPk {
-  id: number
-  pk_id: number
-  room_id: number
-  time: number
-  status: number
-  asset_icon: string
-  asset_animation_pic: string
-  title: string
-  max_time: number
-}
-interface lotteryInfoDataSilverBox {
-  minute: number
-  silver: number
-  time_end: number
-  time_start: number
-  times: number
-  max_times: number
-  status: number
-}
-interface lotteryInfoDataStorm {
-  id: number
-  num: number
-  time: number
-  content: string
-  hadJoin: number
-  storm_gif: string
-}
-interface lotteryInfoDataPk {
-  id: number
-  pk_id: number
-  room_id: number
-  time: number
-  status: number
-  asset_icon: string
-  asset_animation_pic: string
-  title: string
-  max_time: number
-}
-interface lotteryInfoDataSilverBox {
-  minute: number
-  silver: number
-  time_end: number
-  time_start: number
-  times: number
-  max_times: number
-  status: number
-}
-interface lotteryInfoDataStorm {
-  id: number
-  num: number
-  time: number
-  content: string
-  hadJoin: number
-  storm_gif: string
-}
-/*******************
- ***** online ******
- *******************/
-/**
- * 在线心跳返回
- *
- * @interface userOnlineHeart
- */
-interface userOnlineHeart {
-  code: number
-  msg: string
-  message: string
-  data: userOnlineHeartData
-}
-interface userOnlineHeartData {
-  giftlist: any[]
-}
 /*******************
  ***** options *****
  *******************/
@@ -637,17 +505,18 @@ type Options = import('../options').__Options
 /*******************
  ****** plugin *****
  *******************/
-type EPlugin = import('events')
-interface IPlugin extends EPlugin {
+type EventEmitter = import('events').EventEmitter
+interface IPlugin extends EventEmitter {
   name: string
   description: string
   version: string
   author: string
   loaded: boolean
-  load?({ defaultOptions, whiteList, plugins }: {
+  load?({ defaultOptions, whiteList, plugins, version }: {
     defaultOptions: options,
     whiteList: Set<string>,
-    plugins: string[]
+    plugins: string[],
+    version: version
   }): Promise<void>
   options?({ options }: {
     options: options
@@ -655,7 +524,7 @@ interface IPlugin extends EPlugin {
   start?({ options, users }: {
     options: options,
     users: Map<string, User>
-  }, newUser: boolean): Promise<void>
+  }): Promise<void>
   loop?({ cst, cstMin, cstHour, cstString, options, users }: {
     cst: Date,
     cstMin: number,
@@ -674,22 +543,10 @@ interface IPlugin extends EPlugin {
     options: options,
     users: Map<string, User>
   }): Promise<void>
-  interact?({ msg, options, users }: {
-    msg: utilMSG,
-    options: options,
-    users: Map<string, User>
-  }): Promise<void>
 }
 interface pluginNotify {
   cmd: string
   data: any
-}
-interface utilMSG {
-  cmd: string
-  msg: string
-  ts: string
-  utilID: string
-  data: utilData
 }
 /**
  * BIlibili API统一返回值
@@ -699,4 +556,16 @@ interface bilibiliXHR<T> {
   msg: string
   message: string
   data: T
+}
+interface version {
+  /** 主版本号 */
+  major: number
+  /** 次版本号 */
+  minor: number
+  /** 修订号 */
+  patch: number
+  /** 语义化版本 */
+  semver: string
+  /** 迭代版本号 */
+  version: number
 }

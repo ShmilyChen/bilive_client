@@ -28,7 +28,7 @@ class Tools extends EventEmitter {
         return {
           'Connection': 'Keep-Alive',
           'env': 'prod',
-          'User-Agent': 'Mozilla/5.0 BiliDroid/6.0.0 (bbcallen@gmail.com) os/android model/xiaomi 6 mobi_app/android build/6000200 channel/master innerVer/6000200 osVer/5.1.1 network/2'
+          'User-Agent': 'Mozilla/5.0 BiliDroid/6.10.0 (bbcallen@gmail.com) os/android model/M2007J1SC mobi_app/android build/6100300 channel/master innerVer/6100310 osVer/10 network/2'
         }
       case 'WebView':
         return {
@@ -39,7 +39,7 @@ class Tools extends EventEmitter {
           'Sec-Fetch-Dest': 'empty',
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-site',
-          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; J9110 Build/55.1.A.3.107; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.162 Mobile Safari/537.36 BiliApp/5570300',
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; M2007J1SC Build/QKQ1.200419.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/85.0.4183.120 Mobile Safari/537.36 os/android model/M2007J1SC build/6100300 osVer/10 network/2 BiliApp/6100300 mobi_app/android channel/master innerVer/6100310',
           'X-Requested-With': 'tv.danmaku.bili'
         }
       default:
@@ -52,7 +52,7 @@ class Tools extends EventEmitter {
           'Sec-Fetch-Dest': 'empty',
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-site',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36'
         }
     }
   }
@@ -66,33 +66,22 @@ class Tools extends EventEmitter {
    * @memberof tools
    */
   public async XHR<T>(options: XHRoptions, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<XHRresponse<T> | undefined> {
-    // 为了兼容已有插件
-    if (options.url === undefined && options.uri !== undefined) {
-      options.url = options.uri
-      delete options.uri
-    }
-    if (options.cookieJar === undefined && options.jar !== undefined) {
-      options.cookieJar = options.jar
-      delete options.jar
-    }
-    if (options.encoding === null) {
-      options.responseType = 'buffer'
-      delete options.encoding
-    }
-    if (options.json === true) {
-      options.responseType = 'json'
-      delete options.json
-    }
+
     // @ts-ignore 判断是否被风控
     if (this.ban[options.url]) return
     // 添加头信息
     const headers = this.getHeaders(platform)
     options.headers = options.headers === undefined ? headers : Object.assign(headers, options.headers)
-    if (options.method?.toLocaleUpperCase() === 'POST' && options.headers['Content-Type'] === undefined)
+    if (options.method !== undefined && options.method.toUpperCase() === 'POST' && options.headers['Content-Type'] === undefined)
       options.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
-    // @ts-ignore got把参数分的太细了, 导致responseType没法确定
-    const gotResponse = await got<T>(options).catch(error => {
-      this.ErrorLog(options.url, error.response.body)
+    // got把参数分的太细了, 导致responseType没法确定
+    const gotResponse = await got<T>(<import('got').OptionsOfJSONResponseBody>options).catch(error => {
+      try {
+        this.ErrorLog(options.url, error.response.body)
+      } catch {
+        this.ErrorLog(options.url, error.code)
+        return
+      }
       if (error.response.statusCode === 412) {
         // @ts-ignore
         this.ban[options.url] = true
@@ -102,7 +91,7 @@ class Tools extends EventEmitter {
         this.ErrorLog(this.ban)
       }
     })
-    if (gotResponse === undefined) return
+    if (gotResponse === undefined) return undefined
     else return { response: gotResponse, body: gotResponse.body }
   }
   private ban = {}
@@ -115,8 +104,8 @@ class Tools extends EventEmitter {
    * @returns {string}
    * @memberof tools
    */
-  public getCookie(jar: CookieJar, key: string, url = 'https://api.live.bilibili.com'): string {
-    const cookies = jar.getCookiesSync(url)
+  public getCookie(cookieJar: CookieJar, key: string, url = 'https://api.live.bilibili.com'): string {
+    const cookies = cookieJar.getCookiesSync(url)
     const cookieFind = cookies.find(cookie => cookie.key === key)
     return cookieFind === undefined ? '' : cookieFind.value
   }
@@ -173,7 +162,11 @@ class Tools extends EventEmitter {
   public Date(): string {
     return new Date().toString().slice(4, 24)
   }
-
+  /**
+   * 格式化日期输出
+   * @param format 格式化字符串
+   * @param date 时间
+   */
   public format = (format: string, date: Date = new Date()) => {
     /*
      * eg:format="yyyy-MM-dd hh:mm:ss";
@@ -236,7 +229,7 @@ class Tools extends EventEmitter {
    * @memberof tools
    */
   public ErrorLog(...message: any[]) {
-    console.error(`${this.Date()} :`, ...message)
+    console.error(`${this.format("yyyy-MM-dd hh:mm:ss:SSS")} :`, ...message)
   }
   /**
    * sleep
@@ -249,6 +242,14 @@ class Tools extends EventEmitter {
     return new Promise<'sleep'>(resolve => setTimeout(() => resolve('sleep'), ms))
   }
   /**
+   * 极验验证码识别
+   *
+   * @param {string} ValidateURL
+   * @returns {Promise<string>}
+   * @memberof tools
+   */
+  public Validate!: (ValidateURL: string) => Promise<string>
+  /**
    * 为了兼容旧版
    *
    * @param {string} message
@@ -256,30 +257,6 @@ class Tools extends EventEmitter {
    * @memberof Tools
    */
   public sendSCMSG!: (message: string) => void
-  /**
-   * 异或加密
-   *
-   * @param {string} key
-   * @param {string} input
-   * @returns {string}
-   */
-  public static xorStrings(key: string, input: string): string {
-    let output: string = ''
-    for (let i = 0, len = input.length; i < len; i++) {
-      output += String.fromCharCode(
-        input.charCodeAt(i) ^ key.charCodeAt(i % key.length)
-      )
-    }
-    return output
-  }
-  public B64XorCipher = {
-    encode(key: string, data: string): string {
-      return (data && data !== '' && key !== '') ? Buffer.from(Tools.xorStrings(key, data), 'utf8').toString('base64') : data
-    },
-    decode(key: string, data: string): string {
-      return (data && data !== '' && key !== '') ? Tools.xorStrings(key, Buffer.from(data, 'base64').toString('utf8')) : data
-    }
-  }
   /**
    * 生成指定范围内的随机数
    * @param lower 最小范围
@@ -292,5 +269,4 @@ class Tools extends EventEmitter {
     return Math.floor(Date.now() / 1000)
   }
 }
-
 export default new Tools()

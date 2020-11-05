@@ -46,9 +46,11 @@ build
 options
 package-lock.json
 temp
-docs/view/options.js
-docs/view/script.js
+docs/view/
 *.http
+bilive/plugins/
+
+*.zip
 
 # ide file
 .idea

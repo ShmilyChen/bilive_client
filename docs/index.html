@@ -7,25 +7,23 @@
 
   <title>bilive</title>
   <!-- bootstrap css -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-  <link rel="stylesheet" type="text/css" href="./view/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./view/style.css">
   <!-- bootstrap javascript -->
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
-  </script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
   <!-- qrcode javascript -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" integrity="sha256-Fk/Cwcnq8KA6qN/bhV6C5BpcaSL7rYuzI4EWIH4mvvc=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+  <!-- crypto-js -->
+  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.0.0/crypto-js.js"></script>
+  <!-- geetest -->
+  <script src="https://static.geetest.com/static/tools/gt.js"></script>
+  <script defer src="./view/ECDH.js"></script>
   <!-- 与服务器通信 -->
-  <script defer type="text/javascript" src="./view/options.js"></script>
-  <!-- 运行脚本 -->
-  <script defer type="text/javascript" src="./view/script.js"></script>
+  <script defer src="./view/options.js"></script>
+  <!-- 自定义 -->
+  <script defer src="./view/script.js"></script>
 </head>
 
 <body>
@@ -40,30 +38,22 @@
                 <h1>
                   <span>Bilive</span>
                   <iframe
-                    src="https://ghbtns.com/github-btn.html?user=Vector000&amp;repo=bilive_client&amp;type=star&amp;count=true&amp;size=large"
+                    src="https://ghbtns.com/github-btn.html?user=bilive&repo=bilive_client&type=star&count=true&size=large"
                     frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
                 </h1>
               </div>
               <div class="card-body">
                 <div id="path" class="input-group mt-2">
-                  <div class="input-group-prepend" data-toggle="tooltip" data-placement="top" title="通讯地址不会进行加密">
+                  <div class="input-group-prepend">
                     <span class="input-group-text">地址</span>
                   </div>
-                  <input type="text" class="form-control" value="ws://localhost:23333">
+                  <input type="text" class="form-control">
                 </div>
                 <div id="protocol" class="input-group mt-1">
-                  <div class="input-group-prepend" data-toggle="tooltip" data-placement="top" data-html="true"
-                    title="<strong>protocol</strong>不会进行加密，请勿当作密码使用">
+                  <div class="input-group-prepend">
                     <span class="input-group-text">protocol</span>
                   </div>
-                  <input type="text" class="form-control" value="admin">
-                </div>
-                <div id="netkey" class="input-group mt-1">
-                  <div class="input-group-prepend" data-toggle="tooltip" data-html="true" data-placement="top"
-                    title="<p>输入的密钥仅储存在页面的内存中，对所有的通讯数据进行加密或解密，以提升数据安全性（不填则不适用加密）</p><p>本加密会使数据体积增大，但对带宽影响还是很小的，强烈建议开启！</p>">
-                    <span class="input-group-text">密钥</span>
-                  </div>
-                  <input type="password" class="form-control" name="netkey" value="">
+                  <input type="text" class="form-control">
                 </div>
               </div>
               <div id="connect" class="card-footer">
@@ -82,72 +72,17 @@
               <div class="card-header">
                 <h4>Bilive</h4>
               </div>
-              <div id="config" class="card-body"></div>
+              <div id="config" class="card-body">
+              </div>
               <div class="card-footer">
                 <button type="button" id="saveConfig" class="btn btn-primary">保存设置</button>
                 <button type="button" id="addUser" class="btn btn-primary">添加用户</button>
-                <button type="button" id="showAdvOption" class="btn btn-primary">高级设置</button>
                 <button type="button" id="showLog" class="btn btn-primary">显示日志</button>
-                <button type="button" id="showChangeNetkey" class="btn btn-primary">修改密钥</button>
               </div>
             </div>
           </div>
         </div>
         <div id="user" class="row"></div>
-      </div>
-      <!-- 高级设置 -->
-      <div id="advOption" class="container-fluid position-absolute d-none">
-        <div class="row justify-content-center">
-          <div class="col-md-8 m-3">
-            <div class="card border-primary">
-              <div class="card-header">
-                <h4>注意：除非你真的知道这是什么东西，不然就别瞎搞XD</h4>
-              </div>
-              <div id="advConfig" class="card-body"></div>
-              <div class="card-footer">
-                <button type="button" id="saveAdvConfig" class="btn btn-primary">保存设置</button>
-                <button type="button" id="optionReturn" class="btn btn-primary">返回</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id="util" class="row"></div>
-      </div>
-      <!-- 修改密钥 -->
-      <div id="changeNetkey" class="container-fluid position-absolute d-none">
-        <div class="row justify-content-center">
-          <div class="col-md-8 m-3">
-            <div class="card border-primary">
-              <div class="card-header">
-                <h4>
-                  注意：由于密钥是一直在使用的，建议有能力的话在服务器中手动修改<code>options.json</code>配置文件中<code>netkey</code>的值。
-                  <br>
-                  如果不行的话，可以在这里修改。这里会使用一些黑魔法的方式修改密钥，不保证兼容所有浏览器。
-                  <br>
-                  若长时间卡住在此界面，请手动刷新，并尝试使用新的密钥。
-                </h4>
-              </div>
-              <div class="card-body">
-                <div class="input-group mt-1">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">新密钥</span>
-                  </div>
-                  <input type="password" class="form-control" name="newNetkey1" value="">
-                </div>
-                <div class="input-group mt-1">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">再输入一次新密钥</span>
-                  </div>
-                  <input type="password" class="form-control" name="newNetkey2" value="">
-                </div>
-              </div>
-              <div class="card-footer">
-                <button type="button" id="saveNewNetkey" class="btn btn-primary">保存新密钥</button>
-                <button type="button" id="netkeyReturn" class="btn btn-primary">返回</button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
       <!-- 日志 -->
       <div id="log" class="container-fluid position-absolute d-none">
@@ -162,6 +97,7 @@
   </div>
   <!-- 模板 -->
   <div id="template" class="d-none">
+    <!-- 输入框 -->
     <template id="configTextTemplate">
       <div class="input-group mb-1">
         <div class="input-group-prepend">
@@ -170,6 +106,7 @@
         <input type="text" class="form-control">
       </div>
     </template>
+    <!-- 复选框 -->
     <template id="configCheckboxTemplate">
       <div class="form-check mb-1">
         <label class="form-check-label">
@@ -178,6 +115,19 @@
         </label>
       </div>
     </template>
+    <!-- 带复选框的输入框 -->
+    <template id="configChecktextTemplate">
+      <div class="input-group mb-1">
+        <div class="input-group-prepend">
+          <label class="input-group-text pl-4">
+            <input type="checkbox" class="form-check-input">
+            <span class="_description" data-toggle="tooltip" data-placement="top"></span>
+          </label>
+        </div>
+        <input type="text" class="form-control">
+      </div>
+    </template>
+    <!-- 用户 -->
     <template id="userTemplate">
       <div class="col-md-3 mb-3 userData">
         <div class="card border-primary">
@@ -190,26 +140,7 @@
         </div>
       </div>
     </template>
-    <template id="utilTemplate">
-      <div class="col-md-3 mb-3 utilData">
-        <div class="card border-primary">
-          <div id="utilConfig" class="card-body utilConfigClass">
-          </div>
-          <div class="card-footer">
-            <button type="button" class="btn btn-primary utilPost">提交</button>
-          </div>
-        </div>
-      </div>
-    </template>
-    <template id="utilUserListTemplate">
-      <div class="input-group mb-1">
-        <div class="input-group-prepend">
-          <span class="input-group-text _description" data-toggle="tooltip" data-placement="top"></span>
-        </div>
-        <select class="form-control">
-        </select>
-      </div>
-    </template>
+    <!-- 模态框 -->
     <template id="modalContentTemplate">
       <div class="modal-content">
         <div class="modal-header">
@@ -226,13 +157,14 @@
         </div>
       </div>
     </template>
-    <template id="captchaTemplate">
-      <div class="card">
-        <img class="card-img-top" alt="验证码">
-        <div class="card-body">
-          <input type="text" class="form-control" placeholder="请输入验证码">
-        </div>
+    <!-- 极验验证码 -->
+    <template id="validateTemplate">
+      <div class="validate">
       </div>
+    </template>
+    <!-- 二维码 -->
+    <template id="authcodeTemplate">
+      <img class="authcode" alt="二维码">
     </template>
   </div>
 </body>

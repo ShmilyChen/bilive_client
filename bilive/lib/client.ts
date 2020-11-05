@@ -2,7 +2,7 @@ import ws from 'ws'
 import { EventEmitter } from 'events'
 import tools from './tools'
 /**
- * Bilive客户端, 用于连接服务器和发送事件
+ * Blive客户端, 用于连接服务器和发送事件
  *
  * @class Client
  * @extends {EventEmitter}
@@ -79,7 +79,7 @@ class Client extends EventEmitter {
     this._wsClient = new ws(this._server, [this._protocol], {
       rejectUnauthorized: false,
       headers: {
-        'User-Agent': 'Bilive_Client 2.2.6.2260V'
+        'User-Agent': `Bilive_Client ${process.env.version}`
       },
       // @ts-ignore d.ts 未更新
       servername: serverTest === undefined ? '' : undefined

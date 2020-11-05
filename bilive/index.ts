@@ -12,11 +12,23 @@ const FSreadDir = util.promisify(fs.readdir)
  * @class BiLive
  */
 class BiLive {
-  constructor() { }
+  constructor() {
+  }
+  /**
+   * 版本
+   *
+   * @type {version}
+   * @memberof BiLive
+   */
+  public version: version = {
+    major: 3,
+    minor: 0,
+    patch: 0,
+    semver: '3.0.0',
+    version:300
+  }
   // 系统消息监听
   private _Listener!: Listener
-  // WS服务器
-  private _WebAPI!: WebAPI
   // 全局计时器
   private _lastTime = ''
   public loop!: NodeJS.Timer
@@ -24,7 +36,7 @@ class BiLive {
    * 插件列表
    *
    * @private
-   * @type {Map<string, IPlugin>}
+   * @type {Map<string, plugin>}
    * @memberof BiLive
    */
   private _pluginList: Map<string, IPlugin> = new Map()
@@ -34,29 +46,44 @@ class BiLive {
    * @memberof BiLive
    */
   public async Start() {
-    await this._loadPlugin() // 加载插件
-    Options.init() // 初始化设置
-    Options.on('newUser', (user: User) => { // 新用户
-      this._pluginList.forEach(async plugin => { // 运行插件
-        if (typeof plugin.start === 'function')
-          await plugin.start({ options: Options._, users: new Map([[user.uid, user]]) }, true)
+    // 加载插件
+    await this._loadPlugin()
+    // 初始化设置
+    Options.init()
+    // 初始化运行插件
+    this._pluginList.forEach(async plugin => {
+      if (typeof plugin.options === 'function') await plugin.options({ options: Options._ })
+    })
+    // 新用户
+    Options.on('newUser', (user: User) => {
+      // 运行插件
+      this._pluginList.forEach(async plugin => {
+        if (typeof plugin.start === 'function') await plugin.start({ options: Options._, users: new Map([[user.uid, user]]) })
       })
     })
     for (const uid in Options._.user) {
       if (!Options._.user[uid].status) continue
       const user = new User(uid, Options._.user[uid])
       const status = await user.Start()
-      if (status !== undefined) user.Stop()
+      if (status !== undefined) {
+        if (status === 'validate' && typeof tools.Validate === 'function') {
+          const validate = await tools.Validate(user.validateURL)
+          if (validate !== '') {
+            user.validate = validate
+            const secondStatus = await user.Start()
+            if (secondStatus !== undefined) user.Stop()
+          }
+          else user.Stop()
+        }
+        else user.Stop()
+      }
     }
-    this._pluginList.forEach(async plugin => { // 运行插件
-      if (typeof plugin.start === 'function')
-        await plugin.start({ options: Options._, users: Options.user }, false)
+    // 运行插件
+    this._pluginList.forEach(async plugin => {
+      if (typeof plugin.start === 'function') await plugin.start({ options: Options._, users: Options.user })
     })
-    this.loop = setInterval(() => this._loop(), 55 * 1000)
-    this._WebAPI = new WebAPI()
-    this._WebAPI
-      .on('utilMSG', msg => this._Interact(msg))
-      .Start()
+    this.loop = setInterval(() => this._loop(), 50 * 1000)
+    new WebAPI().Start()
     this.Listener()
   }
   /**
@@ -73,10 +100,9 @@ class BiLive {
     this._lastTime = cstString
     const cstHour = cst.getUTCHours()
     const cstMin = cst.getUTCMinutes()
-    if (Options._.config.localListener) this._Listener.updateAreaRoom() // 更新监听房间
     if (cstMin === 0 && cstHour % 12 === 0) Options.backup() // 每天备份两次
-    this._Listener.clearAllID() // 清空ID缓存
-    this._pluginList.forEach(plugin => { // 插件运行
+    // 运行插件
+    this._pluginList.forEach(plugin => {
       if (typeof plugin.loop === 'function') plugin.loop({ cst, cstMin, cstHour, cstString, options: Options._, users: Options.user })
     })
   }
@@ -91,14 +117,13 @@ class BiLive {
     const plugins = await FSreadDir(pluginsPath)
     for (const pluginName of plugins) {
       const { default: plugin }: { default: IPlugin } = await import(`${pluginsPath}/${pluginName}/index.js`)
-      if (typeof plugin.load === 'function') await plugin.load({ defaultOptions: Options._, whiteList: Options.whiteList, plugins })
+      if (typeof plugin.load === 'function') await plugin.load({ defaultOptions: Options._, whiteList: Options.whiteList, plugins, version: this.version })
       if (plugin.loaded) {
         const { name, description, version, author } = plugin
         tools.Log(`已加载: ${name}, 用于: ${description}, 版本: ${version}, 作者: ${author}`)
         this._pluginList.set(pluginName, plugin)
       }
       plugin.on('msg', async (msg: pluginNotify) => await this._Notify(msg))
-      plugin.on('interact', async msg => await this._WebAPI.callback(msg))
     }
   }
   /**
@@ -124,9 +149,9 @@ class BiLive {
    */
   private async _Message(raffleMessage: raffleMessage | lotteryMessage | beatStormMessage) {
     // 运行插件
-    this._pluginList.forEach(async plugin => {
+    this._pluginList.forEach(plugin => {
       if (typeof plugin.msg === 'function')
-        await plugin.msg({ message: raffleMessage, options: Options._, users: Options.user })
+        plugin.msg({ message: raffleMessage, options: Options._, users: Options.user })
     })
   }
   /**
@@ -141,18 +166,6 @@ class BiLive {
       if (typeof plugin.notify === 'function')
         await plugin.notify({ msg, options: Options._, users: Options.user })
     })
-  }
-  /**
-   * 前端页面交互
-   *
-   * @private
-   * @param {utilMSG} msg
-   * @memberof BiLive
-   */
-  private async _Interact(msg: utilMSG) {
-    const plugin = this._pluginList.get(msg.utilID)
-    if (plugin !== undefined && typeof plugin.interact === 'function')
-      await plugin.interact({ msg: msg, options: Options._, users: Options.user })
   }
 }
 export default BiLive

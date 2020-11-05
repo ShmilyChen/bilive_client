@@ -14,18 +14,18 @@ abstract class TVClient extends AppClient {
   public loginAppKey: string = '4409e2ce8ffd12b8'
   protected __secretKey: string = '59b43e04ad6965f34319062b478f83dd'
   public appKey: string = '4409e2ce8ffd12b8'
-  public biliLocalId: string = AppClient.biliLocalId
+  public biliLocalID: string = AppClient.biliLocalID
   public build: string = '102401'
   public buvid: string = AppClient.buvid
   public channel: string = 'master'
   public device: string = 'Sony'
-  public deviceId: string = this.biliLocalId
+  public deviceID: string = this.biliLocalID
   public deviceName: string = 'G8142'
   public devicePlatform: string = 'Android10SonyG8142'
   public fingerprint: string = AppClient.RandomID(62)
   public guid: string = this.buvid
   public localFingerprint: string = this.fingerprint
-  public localId: string = this.buvid
+  public localID: string = this.buvid
   public mobiApp: string = 'android_tv_yst'
   public networkstate: string = 'wifi'
   public platform: string = 'android'
@@ -47,9 +47,9 @@ abstract class TVClient extends AppClient {
    * @type {string}
    * @memberof AppClient
    */
-  public loginQuery: string = `appkey=${this.loginAppKey}&bili_local_id=${this.biliLocalId}&build=${this.build}&buvid=${this.buvid}&channel=${this.channel}\
-&device=${this.device}&device_id=${this.deviceId}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}&fingerprint=${this.fingerprint}&guid=${this.guid}\
-&local_fingerprint=${this.localFingerprint}&local_id=${this.localId}&mobi_app=${this.mobiApp}&networkstate=${this.networkstate}&platform=${this.platform}`
+  public loginQuery: string = `appkey=${this.loginAppKey}&bili_local_id=${this.biliLocalID}&build=${this.build}&buvid=${this.buvid}&channel=${this.channel}\
+&device=${this.device}&device_id=${this.deviceID}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}&fingerprint=${this.fingerprint}&guid=${this.guid}\
+&local_fingerprint=${this.localFingerprint}&local_id=${this.localID}&mobi_app=${this.mobiApp}&networkstate=${this.networkstate}&platform=${this.platform}`
   /**
    * 验证码, 登录时会自动清空
    *
@@ -81,9 +81,9 @@ abstract class TVClient extends AppClient {
    */
   protected _getKey(): Promise<XHRresponse<getKeyResponse> | undefined> {
     const getKey: XHRoptions = {
-      uri: `https://passport.bilibili.com/x/passport-tv-login/key?${this.signLoginQuery()}`,
-      jar: this.__jar,
-      json: true,
+      url: `https://passport.bilibili.com/x/passport-tv-login/key?${this.signLoginQuery()}`,
+      cookieJar: this.__jar,
+      responseType: 'json',
       headers: this.loginHeaders
     }
     return tools.XHR<getKeyResponse>(getKey, 'Android')
@@ -101,10 +101,10 @@ abstract class TVClient extends AppClient {
     const authQuery = `username=${encodeURIComponent(this.userName)}&password=${passWord}`
     const auth: XHRoptions = {
       method: 'POST',
-      uri: 'https://passport.bilibili.com/x/passport-tv-login/login',
+      url: 'https://passport.bilibili.com/x/passport-tv-login/login',
       body: this.signLoginQuery(authQuery),
-      jar: this.__jar,
-      json: true,
+      cookieJar: this.__jar,
+      responseType: 'json',
       headers: this.loginHeaders
     }
     return tools.XHR<authResponse>(auth, 'Android')
@@ -118,9 +118,9 @@ abstract class TVClient extends AppClient {
   public async getAuthcode(): Promise<qrcodeResponse> {
     const authcode: XHRoptions = {
       method: 'POST',
-      uri: 'https://passport.snm0516.aisee.tv/x/passport-tv-login/qrcode/auth_code',
+      url: 'https://passport.snm0516.aisee.tv/x/passport-tv-login/qrcode/auth_code',
       body: this.signLoginQuery(),
-      json: true,
+      responseType: 'json',
       headers: this.headers
     }
     const authcodeResponse = await tools.XHR<authcodeResponse>(authcode, 'Android')
@@ -169,9 +169,9 @@ abstract class TVClient extends AppClient {
     const qrcodePollQuery = `auth_code=${this.authcode}`
     const qrcodePoll: XHRoptions = {
       method: 'POST',
-      uri: 'https://passport.bilibili.com/x/passport-tv-login/qrcode/poll',
+      url: 'https://passport.bilibili.com/x/passport-tv-login/qrcode/poll',
       body: this.signLoginQuery(qrcodePollQuery),
-      json: true,
+      responseType: 'json',
       headers: this.loginHeaders
     }
     this.authcode = ''
@@ -202,9 +202,9 @@ abstract class TVClient extends AppClient {
     const refreshQuery = `refresh_token=${this.refreshToken}`
     const refresh: XHRoptions = {
       method: 'POST',
-      uri: 'https://passport.bilibili.com/x/passport-login/oauth2/refresh_token',
+      url: 'https://passport.bilibili.com/x/passport-login/oauth2/refresh_token',
       body: this.signLoginQuery(refreshQuery),
-      json: true,
+      responseType: 'json',
       headers: this.loginHeaders
     }
     const refreshResponse = await tools.XHR<authResponse>(refresh, 'Android')

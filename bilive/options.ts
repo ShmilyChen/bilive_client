@@ -1,30 +1,29 @@
-import { EventEmitter } from 'events'
 import fs from 'fs'
 import util from 'util'
 import tools from './lib/tools'
+import { EventEmitter } from 'events'
 const FSwriteFile = util.promisify(fs.writeFile)
 /**
-* 统一设置
-*
-* @class Options
-* @extends {EventEmitter}
-*/
+ * 统一设置
+ *
+ * @class Options
+ * @extends {EventEmitter}
+ */
 class Options extends EventEmitter {
   constructor() {
     super()
     // 根据npm start参数不同设置不同路径
-    // this._dirname = __dirname + (process.env.script === 'build/app.js' || process.env.npm_package_scripts_start === 'node build/app.js' ? '/../..' : '/..')
+    // this._dirname = __dirname + (process.env.npm_package_scripts_start === 'node build/app.js' ? '/../..' : '/..')
     this._dirname = process.cwd()
     // 检查是否有options目录
     const hasDir = fs.existsSync(this._dirname + '/options/')
     if (!hasDir) fs.mkdirSync(this._dirname + '/options/')
-    // 读取默认设置文件
-    const defaultOptionBuffer = fs.readFileSync(this._dirname + '/bilive/options.default.json')
-    this._ = <options>JSON.parse(defaultOptionBuffer.toString())
-    this._.util = {}
     // 复制默认设置文件到用户设置文件
     const hasFile = fs.existsSync(this._dirname + '/options/options.json')
     if (!hasFile) fs.copyFileSync(this._dirname + '/bilive/options.default.json', this._dirname + '/options/options.json')
+    // 读取默认设置文件
+    const defaultOptionBuffer = fs.readFileSync(this._dirname + '/bilive/options.default.json')
+    this._ = <options>JSON.parse(defaultOptionBuffer.toString())
     // 读取用户设置文件
     const userOptionBuffer = fs.readFileSync(this._dirname + '/options/options.json')
     this._userOption = this._
@@ -69,14 +68,8 @@ class Options extends EventEmitter {
     'hostname',
     'port',
     'protocol',
-    'netkey',
     'config',
-    'advConfig',
-    'localListener',
-    'defaultUserID',
     'serverURL',
-    'bakServerURL',
-    'eventRooms',
     'user',
     'nickname',
     'userName',
@@ -105,7 +98,6 @@ class Options extends EventEmitter {
   public init() {
     this._.server = Object.assign({}, this._.server, this._userOption.server)
     this._.config = Object.assign({}, this._.config, this._userOption.config)
-    this._.advConfig = Object.assign({}, this._.advConfig, this._userOption.advConfig)
     for (const uid in this._userOption.user) {
       this.whiteList.add(uid)
       this._.user[uid] = Object.assign({}, this._.newUserData, this._userOption.user[uid])
@@ -157,6 +149,7 @@ class Options extends EventEmitter {
    * @memberof Options
    */
   public async save() {
+    // const blacklist = ['newUserData', 'info', 'apiIPs', 'roomList']
     const error = await FSwriteFile(this._dirname + '/options/options.json'
       , JSON.stringify(this._, (key, value) => (key.match(/^\d*$/) !== null || this.whiteList.has(key)) ? value : undefined, 2))
     if (error !== undefined) console.error(`${new Date().toString().slice(4, 24)} :`, error)
@@ -190,9 +183,7 @@ class Options extends EventEmitter {
 }
 // 自定义一些常量
 const liveOrigin = 'https://live.bilibili.com'
-const apiOrigin = 'https://api.bilibili.com'
 const apiVCOrigin = 'https://api.vc.bilibili.com'
 const apiLiveOrigin = 'https://api.live.bilibili.com'
-const beatStormPathname = '/lottery/v1/Storm'
 export default new Options()
-export { Options as __Options, liveOrigin, apiOrigin, apiVCOrigin, apiLiveOrigin, beatStormPathname }
+export { Options as __Options, liveOrigin, apiVCOrigin, apiLiveOrigin }

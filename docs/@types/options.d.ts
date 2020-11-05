@@ -1,13 +1,17 @@
 interface Window {
   Options: Options
-  }
+  qrcode: typeof import('qrcode-generator')
+  CryptoJS: typeof import('crypto-js')
+}
 // WebSocket消息
 interface message {
   cmd: string
   msg?: string
   ts?: string
   uid?: string
-  data?: config | optionsInfo | string[] | userData | utilData
+  data?: config | optionsInfo | string | string[] | userData
+  validate?: string
+  authcode?: string
 }
 interface logMSG extends message {
   data: string[]
@@ -24,13 +28,8 @@ interface userMSG extends message {
 interface userDataMSG extends message {
   uid: string
   data: userData
-  captcha?: string
   validate?: string
   authcode?: string
-}
-interface utilMSG extends message {
-  utilID: string
-  data: utilData
 }
 // 应用设置
 interface config {
@@ -46,12 +45,4 @@ interface configInfoData {
   description: string
   tip: string
   type: string
-}
-interface utilData {
-  [index: string]: utilDataItem
-}
-interface utilDataItem {
-  value: string | boolean | number | number[]
-  list?: string[]
-  info: configInfoData
 }

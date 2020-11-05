@@ -13,6 +13,8 @@ enum dmErrorStatus {
   'client',
   'danmaku',
   'timeout',
+  'http',
+  'auth',
 }
 /**
  * 弹幕客户端, 用于连接弹幕服务器和发送弹幕事件
@@ -22,16 +24,16 @@ enum dmErrorStatus {
  */
 class DMclient extends EventEmitter {
   /**
-   * Creates an instance of DMclient.
-   * @param {Options} [{ roomID = 23058, userID = 0, protocol = 'socket' }={}]
+   *Creates an instance of DMclient.
+   * @param {DMclientOptions} [{ roomID = 23058, protocol = 'socket', userID = 0, token = '' }={}]
    * @memberof DMclient
    */
-  constructor({ roomID = 23058, userID = 0, protocol = 'socket', key = '' }: DMclientOptions = {}) {
+  constructor({ roomID = 23058, protocol = 'socket', userID = 0, token = '' }: DMclientOptions = {}) {
     super()
     this.roomID = roomID
     this.userID = userID
     this._protocol = protocol
-    this.key = key
+    this.token = token
   }
   /**
    * 用户UID
@@ -48,12 +50,19 @@ class DMclient extends EventEmitter {
    */
   public roomID: number
   /**
-   * 连接使用的token, 暂时不知道功能
+   * 连接使用的key, 用于验证身份
    *
    * @type {string}
    * @memberof DMclient
    */
-  public key = ''
+  public key: string = ''
+  /**
+   * 连接使用的token, 用于自动获取key
+   *
+   * @type {string}
+   * @memberof DMclient
+   */
+  public token: string
   /**
    * 连接弹幕服务器使用的协议
    * 为了避免不必要的麻烦, 禁止外部修改
@@ -178,7 +187,7 @@ class DMclient extends EventEmitter {
    * @type {Buffer}
    * @memberof DMclient
    */
-  private __data!: Buffer
+  private __data?: Buffer
   /**
    * 错误类型
    *
@@ -186,20 +195,21 @@ class DMclient extends EventEmitter {
    * @type {typeof dmErrorStatus}
    * @memberof DMclient
    */
-  public static readonly dmErrorStatus: typeof dmErrorStatus = dmErrorStatus
+  public static readonly errorStatus: typeof dmErrorStatus = dmErrorStatus
   /**
    * 连接到指定服务器
    *
-   * @param {{ server: string, port: number, key: string }} [options]
+   * @param {{ server: string, port: number, userID: number, key: string }} [options]
    * @memberof DMclient
    */
-  public async Connect(options?: { server: string, port: number, key: string }) {
+  public async Connect(options?: { server: string, port: number, userID?: number, key?: string }) {
     if (this._connected) return
     this._connected = true
     if (options === undefined) {
       // 动态获取服务器地址, 防止B站临时更换
+      const accessKey = this.token === '' ? '' : `access_key=${this.token}&`
       const getDanmuInfo: XHRoptions = {
-        url: `https://api.live.bilibili.com/xlive/app-room/v1/index/getDanmuInfo?${AppClient.signQueryBase(`room_id=${this.roomID}`)}`,
+        url: `https://api.live.bilibili.com/xlive/app-room/v1/index/getDanmuInfo?${AppClient.signQueryBase(`${accessKey}room_id=${this.roomID}`)}`,
         responseType: 'json'
       }
       const danmuInfo = await tools.XHR<danmuInfo>(getDanmuInfo, 'Android')
@@ -216,6 +226,11 @@ class DMclient extends EventEmitter {
         wssPort = danmuInfo.body.data.host_list[0].wss_port
         this.key = danmuInfo.body.data.token
       }
+      else {
+        // 获取 key 失败
+        const errorInfo: DMclientError = { status: dmErrorStatus.http, error: new Error('http错误') }
+        return this._ClientErrorHandler(errorInfo)
+      }
       if (this._protocol === 'socket' || this._protocol === 'flash') {
         this._server = socketServer
         this._port = socketPort
@@ -229,7 +244,8 @@ class DMclient extends EventEmitter {
     else {
       this._server = options.server
       this._port = options.port
-      this.key = options.key
+      if (options.userID !== undefined) this.userID = options.userID
+      if (options.key !== undefined) this.key = options.key
     }
     this._ClientConnect()
   }
@@ -243,15 +259,17 @@ class DMclient extends EventEmitter {
     this._connected = false
     clearTimeout(this._Timer)
     clearTimeout(this._timeout)
-    if (this._protocol === 'socket' || this._protocol === 'flash') {
-      (<Socket>this._client).end();
-      (<Socket>this._client).destroy()
+    if (this._client !== undefined) {
+      if (this._protocol === 'socket' || this._protocol === 'flash') {
+        (<Socket>this._client).end();
+        (<Socket>this._client).destroy()
+      }
+      else {
+        (<ws>this._client).close();
+        (<ws>this._client).terminate()
+      }
+      this._client.removeAllListeners()
     }
-    else {
-      (<ws>this._client).close();
-      (<ws>this._client).terminate()
-    }
-    this._client.removeAllListeners()
     // 发送关闭消息
     this.emit('close')
   }
@@ -289,7 +307,7 @@ class DMclient extends EventEmitter {
   protected _ClientErrorHandler(errorInfo: DMerror) {
     // 'error' 为关键词, 为了避免麻烦不使用
     this.emit('DMerror', errorInfo)
-    if (errorInfo.status !== DMclient.dmErrorStatus.danmaku) this.Close()
+    if (errorInfo.status !== DMclient.errorStatus.danmaku) this.Close()
   }
   /**
    * 向服务器发送自定义握手数据
@@ -300,11 +318,11 @@ class DMclient extends EventEmitter {
   protected _ClientConnectHandler() {
     let data: string
     if (this._protocol === 'socket')
-    data = JSON.stringify({ group: '', uid: this.userID, roomid: this.roomID, key: this.key, platform: 'android', clientver: '5.57.0.5570300', hwid: AppClient.deviceId, protover: 2 })
+      data = JSON.stringify({ group: '', uid: this.userID, roomid: this.roomID, key: this.key, platform: 'android', clientver: '6.10.0.6100310', hwid: AppClient.deviceID, protover: 2 })
     else if (this._protocol === 'flash')
       data = JSON.stringify({ key: this.key, clientver: '2.4.6-9e02b4f1', roomid: this.roomID, uid: this.userID, protover: 2, platform: 'flash' })
-      else data = JSON.stringify({ uid: this.userID, roomid: this.roomID, protover: 2, platform: 'web', clientver: '1.10.6', type: 2, key: this.key })
-      this._ClientSendData(16 + data.length, 16, this.version, 7, this.driver, data)
+    else data = JSON.stringify({ uid: this.userID, roomid: this.roomID, protover: 2, platform: 'web', clientver: '1.16.1', type: 2, key: this.key })
+    this._ClientSendData(16 + data.length, 16, this.version, 7, this.driver, data)
   }
   /**
    * 心跳包
@@ -371,6 +389,11 @@ class DMclient extends EventEmitter {
       else return
     }
     // 读取数据
+    if (data.readInt32BE() === 0x48545450) {
+      // userID 与 key 不匹配
+      const errorInfo: DMclientError = { status: dmErrorStatus.auth, error: new Error('uid不匹配') }
+      return this._ClientErrorHandler(errorInfo)
+    }
     const dataLen = data.length
     if (dataLen < 16 || dataLen > 0x100000) {
       // 抛弃长度过短和过长的数据
@@ -423,7 +446,7 @@ class DMclient extends EventEmitter {
         this.emit('online', data.readInt32BE(16))
         break
       case 5: {
-        const dataJson = await tools.JSONparse<danmuJson>(data.toString('UTF-8', 16))
+        const dataJson = await tools.JSONparse<danmuJson>(data.toString('utf-8', 16))
         if (dataJson !== undefined) this._ClientData(dataJson)
         else {
           // 格式化消息失败则跳过
@@ -434,7 +457,7 @@ class DMclient extends EventEmitter {
         break
       case 8:
         this._ClientHeart()
-        const dataJson = await tools.JSONparse<danmuJson>(data.toString('UTF-8', 16))
+        const dataJson = await tools.JSONparse<danmuJson>(data.toString('utf-8', 16))
         this.emit('connect', dataJson === undefined ? 'connect' : dataJson)
         break
       default: {
@@ -455,7 +478,6 @@ class DMclient extends EventEmitter {
     dataJson._roomid = this.roomID
     this.emit('ALL_MSG', dataJson)
     this.emit(dataJson.cmd, dataJson)
-    //tools.Log(dataJson)
   }
   /**
    * 解压数据
