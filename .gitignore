@@ -50,9 +50,9 @@ docs/view/
 *.http
 bilive/plugins/
 
-*.zip
-
 # ide file
 .idea
 
 test
+
+CookieSet.json

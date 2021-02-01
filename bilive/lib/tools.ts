@@ -268,5 +268,9 @@ class Tools extends EventEmitter {
   public getTime() {
     return Math.floor(Date.now() / 1000)
   }
+
+  public isToday(date: string) {
+    return new Date(date).toString().slice(0, 10) === new Date().toString().slice(0, 10)
+  }
 }
 export default new Tools()
