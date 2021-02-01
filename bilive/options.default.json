@@ -18,6 +18,7 @@
     "accessToken": "",
     "refreshToken": "",
     "cookie": "",
+    "deviceInfo": "",
     "status": false
   },
   "info": {
@@ -52,12 +53,6 @@
       "tip": "bilibili站内的UID, 自动获取, 一般无用",
       "type": "number"
     },
-    "cookie": {
-      "description": "Cookie (已隐藏)",
-      "tip": "cookie, 可自动获取, 一般无用",
-      "type": "string",
-      "password": true
-    },
     "accessToken": {
       "description": "accessToken (已隐藏)",
       "tip": "accessToken, 可自动获取, 一般无用",
@@ -69,6 +64,17 @@
       "tip": "refreshToken, 可自动获取, 一般无用",
       "type": "string",
       "password": true
+    },
+    "cookie": {
+      "description": "Cookie (已隐藏)",
+      "tip": "cookie, 可自动获取, 一般无用",
+      "type": "string",
+      "password": true
+    },
+    "deviceInfo": {
+      "description": "设备信息",
+      "tip": "用于验证登录设备, 仅在登录时使用",
+      "type": "string"
     },
     "status": {
       "description": "开关",

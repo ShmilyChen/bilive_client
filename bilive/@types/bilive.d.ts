@@ -35,6 +35,7 @@ interface userData {
   accessToken: string
   refreshToken: string
   cookie: string
+  deviceInfo: string
   status: boolean
 }
 type optionsInfo = {
@@ -239,6 +240,38 @@ interface qrcodeResponseHttp {
   status: appStatus.httpError
   data: XHRresponse<authcodeResponse> | undefined
 }
+/**
+ * 设备信息
+ */
+interface deviceInfo {
+  vendor: {
+    brand: string
+    cpuVendor: string
+    date: string
+    device: string
+    fingerprint: string
+    id: string
+    incremental: string
+    kernel: string
+    manufacturer: string
+    marketname: string
+    model: string
+    modem: string
+    name: string
+    platform: string
+    release: string
+    sdk: string
+    tags: string
+    type: string
+    utc: string
+  }
+  adid: string
+  guid: string
+  mac: string
+  sn: string
+  uid: string
+  yyyyMMddHHmmss: string
+}
 /*******************
  ****** tools ******
  *******************/
@@ -258,6 +291,9 @@ interface XHRresponse<T> {
   response: import('got').Response
   body: T
 }
+/*******************
+ ** bilive_client **
+ *******************/
 /**
  * 客户端消息
  *
@@ -286,7 +322,7 @@ interface raffleMessage {
   max_time: number
   time_wait: number
   raw: '' | TV_START | RAFFLE_START
-  timeout: number
+  timeout:number
 }
 /**
  * 消息格式
@@ -301,7 +337,7 @@ interface lotteryMessage {
   title: string
   time: number
   raw: '' | LOTTERY_START | PK_LOTTERY_START
-  timeout: number
+  timeout:number
 }
 /**
  * 消息格式
@@ -316,6 +352,7 @@ interface beatStormMessage {
   title: string
   time: number
   raw: '' | SPECIAL_GIFT
+  timeout:number
 }
 /**
  * 消息格式
@@ -328,6 +365,7 @@ interface anchorLotMessage {
   id: number
   title: string
   raw: '' | ANCHOR_LOT_START
+  timeout:number
 }
 /**
  * 消息格式
@@ -340,6 +378,7 @@ interface boxActivityMessage {
   id: number
   title: string
   raw: '' | BOX_ACTIVITY_START
+  timeout:number
 }
 /**
  * 消息格式
@@ -506,7 +545,7 @@ type Options = import('../options').__Options
  ****** plugin *****
  *******************/
 type EventEmitter = import('events').EventEmitter
-interface IPlugin extends EventEmitter {
+interface IPlugin  extends EventEmitter {
   name: string
   description: string
   version: string
@@ -549,7 +588,7 @@ interface pluginNotify {
   data: any
 }
 /**
- * BIlibili API统一返回值
+ * BIlibili API 统一返回值
  */
 interface bilibiliXHR<T> {
   code: number

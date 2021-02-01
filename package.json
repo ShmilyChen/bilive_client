@@ -1,10 +1,10 @@
 {
   "name": "bilive_client",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "基于Node.JS的bilibili直播挂机系统",
   "main": "index.js",
   "scripts": {
-    "build": "npm run clean && npm run build:client && npm run build:view",
+    "build": "npm run build:client && npm run build:view",
     "build:client": "tsc -p tsconfig.json && npm-run-posix-or-windows copy:client",
     "build:view": "tsc -p docs/tsconfig.json && npm-run-posix-or-windows copy:view",
     "copy:client": "cp bilive/options.default.json build/bilive/ && mkdir -p build/bilive/plugins/",
@@ -28,17 +28,17 @@
     "@types/bootstrap": "^4.5.0",
     "@types/crypto-js": "^3.1.47",
     "@types/jquery": "^3.5.1",
-    "@types/node": "^14.11.2",
+    "@types/node": "^14.14.22",
     "@types/tough-cookie": "^4.0.0",
-    "@types/ws": "^7.2.6",
+    "@types/ws": "^7.4.0",
     "npm-run-posix-or-windows": "^2.0.2",
     "qrcode-generator": "^1.4.4",
-    "typescript": "^4.0.3"
+    "typescript": "^4.1.3"
   },
   "dependencies": {
     "form-data": "^3.0.0",
-    "got": "^11.7.0",
+    "got": "^11.8.1",
     "tough-cookie": "^4.0.0",
-    "ws": "^7.3.1"
+    "ws": "^7.4.2"
   }
 }

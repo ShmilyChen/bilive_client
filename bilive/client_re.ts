@@ -61,7 +61,6 @@ class ClientRE extends Client {
           this.reConnectTime++
           this.Connect()
         }
-        await tools.Sleep(1000)
       }, 10 * 1000)
     }
   }

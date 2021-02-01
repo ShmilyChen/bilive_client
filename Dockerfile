@@ -1,13 +1,8 @@
-FROM node:12.6.0-alpine
+FROM node:14-alpine
 
-EXPOSE 23333
-
-WORKDIR /bilive_client
-
-COPY . /bilive_client
-
-RUN npm config set registry https://registry.npm.taobao.org --global && npm config set disturl https://npm.taobao.org/dist --global
+WORKDIR /app
+COPY . /app
 RUN npm install && npm run build
-RUN mkdir options
 
+EXPOSE 10080
 CMD ["npm", "start"]

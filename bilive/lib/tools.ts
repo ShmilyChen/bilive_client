@@ -138,7 +138,7 @@ class Tools extends EventEmitter {
       }
       catch (error) {
         this.ErrorLog('JSONparse', error)
-        return resolve()
+        return resolve(undefined)
       }
     })
   }

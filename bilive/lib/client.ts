@@ -79,7 +79,7 @@ class Client extends EventEmitter {
     this._wsClient = new ws(this._server, [this._protocol], {
       rejectUnauthorized: false,
       headers: {
-        'User-Agent': `Bilive_Client 3.0.0`
+        'User-Agent': `Bilive_Client 3.0.1`
       },
       // @ts-ignore d.ts 未更新
       servername: serverTest === undefined ? '' : undefined

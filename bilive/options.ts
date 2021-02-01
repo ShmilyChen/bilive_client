@@ -78,6 +78,7 @@ class Options extends EventEmitter {
     'accessToken',
     'refreshToken',
     'cookie',
+    'deviceInfo',
     'status'
   ])
   /**
