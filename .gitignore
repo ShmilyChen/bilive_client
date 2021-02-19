@@ -48,7 +48,6 @@ package-lock.json
 temp
 docs/view/
 *.http
-bilive/plugins/
 
 # ide file
 .idea
