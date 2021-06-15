@@ -52,6 +52,8 @@ docs/view/
 # ide file
 .idea
 
-test
+test/*
 
 CookieSet.json
+
+bilive/plugins/judGement

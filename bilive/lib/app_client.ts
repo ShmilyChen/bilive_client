@@ -799,7 +799,7 @@ abstract class AppClient {
 &device=phone&device_id=${this.deviceID}&device_meta=${deviceMeta}&device_name=${this.deviceName}&device_platform=${this.devicePlatform}&dt=${dt}&local_id=${this.localID}`
     const auth: XHRoptions = {
       method: 'POST',
-      url: 'https://passport.bilibili.com/api/v3/oauth2/login',
+      url: 'https://passport.bilibili.com/x/passport-login/oauth2/login',
       body: this.signLoginQuery(authQuery),
       cookieJar: this.__jar,
       responseType: 'json',
@@ -838,7 +838,7 @@ abstract class AppClient {
       const authResponse = await this._auth(getKeyResponse.body.data)
       if (authResponse?.response.statusCode === 200) {
         if (authResponse.body.code === 0) {
-          if (authResponse.body.data.token_info !== undefined && authResponse.body.data.cookie_info !== undefined) {
+          if (authResponse.body.data.token_info !== undefined && authResponse.body.data.cookie_info !== undefined && authResponse.body.data.token_info !== null && authResponse.body.data.cookie_info !== null) {
             this._update(authResponse.body.data)
             return { status: AppClient.status.success, data: authResponse.body }
           }

@@ -161,13 +161,14 @@ class SendGift extends Plugin {
       const medalList: XHRoptions = {
         url: `https://api.live.bilibili.com/i/api/medal?page=${i}&pageSize=25`,
         responseType: 'json',
-        cookieJar: user.jar
+        cookieJar: user.jar,
+        headers: user.headers,
       }
       const medalListInfo = await tools.XHR<bilibiliXHR<medelData>>(medalList)
       if (medalListInfo !== undefined && medalListInfo.response.statusCode === 200) {
         if (medalListInfo.body.code === 0) {
           fansMedalList = fansMedalList.concat(medalListInfo.body.data.fansMedalList.filter(medal => medal.level <= 20))
-          if (medalListInfo.body.data.pageinfo.totalpages === i) break
+          if (medalListInfo.body.data.pageinfo.totalpages <= i) break
           await tools.Sleep(3 * 1000)
         } else {
           tools.Log(user.nickname, '勋章信息', medalListInfo.body)

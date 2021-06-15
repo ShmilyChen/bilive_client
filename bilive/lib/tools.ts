@@ -4,6 +4,9 @@ import got from 'got'
 import { CookieJar } from 'tough-cookie'
 import { EventEmitter } from 'events'
 import { IncomingHttpHeaders } from 'http'
+
+import fs from 'fs'
+const FSappendFile = util.promisify(fs.appendFile)
 /**
  * 一些工具, 供全局调用
  *
@@ -66,28 +69,42 @@ class Tools extends EventEmitter {
    * @memberof tools
    */
   public async XHR<T>(options: XHRoptions, platform: 'PC' | 'Android' | 'WebView' = 'PC'): Promise<XHRresponse<T> | undefined> {
-
     // @ts-ignore 判断是否被风控
-    if (this.ban[options.url]) return
-    // 添加头信息
+    const url = new URL(options.url)
+    const baseUrl = url.hostname + url.pathname
+    // @ts-ignore    
+    if (this.ban[baseUrl]) return
     const headers = this.getHeaders(platform)
+    // 添加头信息    
     options.headers = options.headers === undefined ? headers : Object.assign(headers, options.headers)
+    if (this.isInDomains(url.hostname)) {
+      const cdn = this.getHost(url.hostname)
+      if (cdn !== undefined) {
+        options.url = options.url?.toString().replace(url.hostname, cdn)
+        options.headers["Host"] = url.hostname
+        if (options.cookieJar !== undefined) {
+          options.cookieJar = this.toDomainCookie(<CookieJar>options.cookieJar, cdn, url.hostname)
+        }
+      }
+    }
     if (options.method !== undefined && options.method.toUpperCase() === 'POST' && options.headers['Content-Type'] === undefined)
       options.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
     // got把参数分的太细了, 导致responseType没法确定
     const gotResponse = await got<T>(<import('got').OptionsOfJSONResponseBody>options).catch(error => {
       try {
-        this.ErrorLog(options.url, error.response.body)
+        // this.Log(options)
+        // this.ErrorLog('error', options.url)
+        this.ErrorLog('error', options.url, error, error.response.body)
       } catch {
-        this.ErrorLog(options.url, error.code)
+        this.ErrorLog('error', options.url, error.code)
         return
       }
       if (error.response.statusCode === 412) {
         // @ts-ignore
-        this.ban[options.url] = true
-        this.Log('接口风控', options.url)
+        this.ban[baseUrl] = true
+        this.Log('接口风控', baseUrl)
         // @ts-ignore
-        setTimeout(() => this.ban[options.url] = false, 10 * 60 * 1000)
+        setTimeout(() => this.ban[baseUrl] = false, 10 * 60 * 1000)
         this.ErrorLog(this.ban)
       }
     })
@@ -220,6 +237,7 @@ class Tools extends EventEmitter {
     this.emit('log', log)
     this.logs.push(log)
     console.log(log)
+    FSappendFile(process.cwd() + "/log/run.log", log + "\n")
   }
   public logs: string[] = []
   /**
@@ -230,6 +248,7 @@ class Tools extends EventEmitter {
    */
   public ErrorLog(...message: any[]) {
     console.error(`${this.format("yyyy-MM-dd hh:mm:ss:SSS")} :`, ...message)
+    FSappendFile(process.cwd() + "/log/error.log", util.format(`${this.format("yyyy-MM-dd hh:mm:ss:SSS")} :`, ...message) + "\n")
   }
   /**
    * sleep
@@ -239,7 +258,7 @@ class Tools extends EventEmitter {
    * @memberof tools
    */
   public Sleep(ms: number): Promise<'sleep'> {
-    return new Promise<'sleep'>(resolve => setTimeout(() => resolve('sleep'), ms))
+    return new Promise<'sleep'>(resolve => setTimeout(() => resolve('sleep'), ms < 0 ? 0 : ms))
   }
   /**
    * 极验验证码识别
@@ -271,6 +290,33 @@ class Tools extends EventEmitter {
 
   public isToday(date: string) {
     return new Date(date).toString().slice(0, 10) === new Date().toString().slice(0, 10)
+  }
+
+  private getHost(domain: string) {
+    const Options = require('../options').default
+    const host = Options._.hosts[domain]
+    if (host !== undefined) {
+      return host[this.random(0, host.length)]
+    }
+    return undefined
+  }
+
+  private isInDomains(domain: string): boolean {
+    const Options = require('../options').default
+    return Object.keys(Options._.hosts).includes(domain)
+  }
+
+  private toDomainCookie(cookieJar: CookieJar, domain: string, old_domain: string) {
+    const jar = new CookieJar()
+    const url = `https://${old_domain}`
+    const cookies = cookieJar.getCookiesSync(url)
+    for (const iterator of cookies) {
+      jar.setCookieSync(`${iterator}; Domain=${domain}; Path=/`, `https://${domain}`)
+    }
+    // cookies.forEach(
+    //   cookie => jar.setCookieSync(`${cookie}; Domain=${domain}; Path=/`, `https://${domain}`)
+    // )
+    return jar
   }
 }
 export default new Tools()

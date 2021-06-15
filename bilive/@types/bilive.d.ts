@@ -13,6 +13,10 @@ interface options {
   newUserData: userData
   info: optionsInfo
   roomList: [number, number][]
+  hosts: Hosts
+}
+interface Hosts {
+  [x: string]: string[]
 }
 interface server {
   path: string
@@ -322,7 +326,7 @@ interface raffleMessage {
   max_time: number
   time_wait: number
   raw: '' | TV_START | RAFFLE_START
-  timeout:number
+  timeout: number
 }
 /**
  * 消息格式
@@ -337,7 +341,7 @@ interface lotteryMessage {
   title: string
   time: number
   raw: '' | LOTTERY_START | PK_LOTTERY_START
-  timeout:number
+  timeout: number
 }
 /**
  * 消息格式
@@ -352,7 +356,7 @@ interface beatStormMessage {
   title: string
   time: number
   raw: '' | SPECIAL_GIFT
-  timeout:number
+  timeout: number
 }
 /**
  * 消息格式
@@ -365,7 +369,7 @@ interface anchorLotMessage {
   id: number
   title: string
   raw: '' | ANCHOR_LOT_START
-  timeout:number
+  timeout: number
 }
 /**
  * 消息格式
@@ -378,7 +382,7 @@ interface boxActivityMessage {
   id: number
   title: string
   raw: '' | BOX_ACTIVITY_START
-  timeout:number
+  timeout: number
 }
 /**
  * 消息格式
@@ -545,7 +549,7 @@ type Options = import('../options').__Options
  ****** plugin *****
  *******************/
 type EventEmitter = import('events').EventEmitter
-interface IPlugin  extends EventEmitter {
+interface IPlugin extends EventEmitter {
   name: string
   description: string
   version: string

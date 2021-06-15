@@ -239,7 +239,6 @@ class Raffle extends Plugin {
       if (message.cmd === 'lottery' || message.cmd === 'pklottery') {
         // this._lotteryQueue[message.cmd].push({ message, options, users })
         this._lotteryQueue.push({ message, options, users })
-        console.log('总队列长度', this._lotteryQueue.length)
       } else if (message.cmd === 'raffle') {
         message['timeout'] = Date.now() + message.time_wait * 1000
         const time = 100 * users.size > 400 ? 400 : 100 * users.size

@@ -53,6 +53,7 @@ class Online extends AppClient {
   public get cookieString(): string { return this.userData.cookie }
   public set cookieString(cookieString: string) { this.userData.cookie = cookieString }
   public jar!: CookieJar
+  public get csrf_token(): string { return tools.getCookie(this.jar, 'bili_jct') }
   /**
    * 如果抽奖做到外面的话应该有用
    *

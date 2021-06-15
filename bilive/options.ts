@@ -1,6 +1,5 @@
 import fs from 'fs'
 import util from 'util'
-import tools from './lib/tools'
 import { EventEmitter } from 'events'
 const FSwriteFile = util.promisify(fs.writeFile)
 /**
@@ -79,7 +78,8 @@ class Options extends EventEmitter {
     'refreshToken',
     'cookie',
     'deviceInfo',
-    'status'
+    'status',
+    // 'hosts'
   ])
   /**
    *文件真实路径
@@ -99,6 +99,13 @@ class Options extends EventEmitter {
   public init() {
     this._.server = Object.assign({}, this._.server, this._userOption.server)
     this._.config = Object.assign({}, this._.config, this._userOption.config)
+    this._.hosts = Object.assign({}, this._.hosts, this._userOption.hosts)
+    for (const key in this._.hosts) {
+      if (Object.prototype.hasOwnProperty.call(this._.hosts, key)) {
+        const element = this._.hosts[key]
+        this._.hosts[key] = [...new Set(element)]
+      }
+    }
     for (const uid in this._userOption.user) {
       this.whiteList.add(uid)
       this._.user[uid] = Object.assign({}, this._.newUserData, this._userOption.user[uid])
@@ -162,6 +169,7 @@ class Options extends EventEmitter {
    * @memberof Options
    */
   public async backup() {
+    const tools = require('./lib/tools').default
     fs.copyFileSync(this._dirname + '/options/options.json', this._dirname + '/options/options.bak')
     tools.Log('成功备份options.json')
   }
@@ -171,6 +179,7 @@ class Options extends EventEmitter {
    * @memberof Options
    */
   public async restore() {
+    const tools = require('./lib/tools').default
     tools.Log('options.json似乎已损坏，将尝试进行还原...')
     if (fs.existsSync(this._dirname + '/options/options.bak')) {
       const backupString = fs.readFileSync(this._dirname + '/options/options.bak').toString()
@@ -186,5 +195,6 @@ class Options extends EventEmitter {
 const liveOrigin = 'https://live.bilibili.com'
 const apiVCOrigin = 'https://api.vc.bilibili.com'
 const apiLiveOrigin = 'https://api.live.bilibili.com'
+const apiOrigin = 'https://api.bilibili.com'
 export default new Options()
-export { Options as __Options, liveOrigin, apiVCOrigin, apiLiveOrigin }
+export { Options as __Options, liveOrigin, apiVCOrigin, apiLiveOrigin, apiOrigin }

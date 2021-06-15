@@ -96,11 +96,11 @@ class Listener extends EventEmitter {
    * @memberof Listener
    */
   public Start() {
-    // this.updateAreaRoom()
+    this.updateAreaRoom()
     // 3s清空一次消息缓存
     this._loop = setInterval(() => this._MSGCache.clear(), 3 * 1000)
     // 10min更新一次房间
-    // this._updateRoomTimer = setInterval(() => this.updateAreaRoom(), 10 * 60 * 1000)
+    this._updateRoomTimer = setInterval(() => this.updateAreaRoom(), 10 * 60 * 1000)
     const { 0: server, 1: protocol } = Options._.config.serverURL.split('#')
     if (protocol !== undefined && protocol !== '') this._RoomListener(server, protocol)
     this.bakServerL()
