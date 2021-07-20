@@ -17,7 +17,7 @@ class PlateActivity extends Plugin {
     defaultOptions: options
     whiteList: Set<string>
   }) {
-    // 风纪任务
+    // 实物活动抽奖
     defaultOptions.newUserData['plateActivity'] = false
     defaultOptions.info['plateActivity'] = {
       description: '实物活动抽奖',

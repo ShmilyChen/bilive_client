@@ -5,8 +5,6 @@ import { CookieJar } from 'tough-cookie'
 import { EventEmitter } from 'events'
 import { IncomingHttpHeaders } from 'http'
 
-import fs from 'fs'
-const FSappendFile = util.promisify(fs.appendFile)
 /**
  * 一些工具, 供全局调用
  *
@@ -31,7 +29,7 @@ class Tools extends EventEmitter {
         return {
           'Connection': 'Keep-Alive',
           'env': 'prod',
-          'User-Agent': 'Mozilla/5.0 BiliDroid/6.10.0 (bbcallen@gmail.com) os/android model/M2007J1SC mobi_app/android build/6100300 channel/master innerVer/6100310 osVer/10 network/2'
+          'User-Agent': 'Mozilla/5.0 BiliDroid/6.32.0 (bbcallen@gmail.com) os/android model/M2007J1SC mobi_app/android build/6320200 channel/master innerVer/6320200 osVer/10 network/2'
         }
       case 'WebView':
         return {
@@ -42,7 +40,7 @@ class Tools extends EventEmitter {
           'Sec-Fetch-Dest': 'empty',
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-site',
-          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; M2007J1SC Build/QKQ1.200419.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/85.0.4183.120 Mobile Safari/537.36 os/android model/M2007J1SC build/6100300 osVer/10 network/2 BiliApp/6100300 mobi_app/android channel/master innerVer/6100310',
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; M2007J1SC Build/QKQ1.200419.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/87.0.4280.141 Mobile Safari/537.36 os/android model/M2007J1SC build/6320200 osVer/10 network/2 BiliApp/6320200 mobi_app/android channel/master innerVer/6320200',
           'X-Requested-With': 'tv.danmaku.bili'
         }
       default:
@@ -55,7 +53,7 @@ class Tools extends EventEmitter {
           'Sec-Fetch-Dest': 'empty',
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-site',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
     }
   }
@@ -237,7 +235,6 @@ class Tools extends EventEmitter {
     this.emit('log', log)
     this.logs.push(log)
     console.log(log)
-    FSappendFile(process.cwd() + "/log/run.log", log + "\n")
   }
   public logs: string[] = []
   /**
@@ -248,7 +245,6 @@ class Tools extends EventEmitter {
    */
   public ErrorLog(...message: any[]) {
     console.error(`${this.format("yyyy-MM-dd hh:mm:ss:SSS")} :`, ...message)
-    FSappendFile(process.cwd() + "/log/error.log", util.format(`${this.format("yyyy-MM-dd hh:mm:ss:SSS")} :`, ...message) + "\n")
   }
   /**
    * sleep
