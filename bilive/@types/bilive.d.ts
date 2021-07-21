@@ -116,7 +116,8 @@ declare enum appStatus {
   'error' = 1,
   'httpError' = 2,
   'validate' = 3,
-  'authcode' = 4,
+  'validatecode' = 4,
+  'authcode' = 5,
 }
 /**
  * 注册返回
@@ -200,7 +201,7 @@ interface loginResponseSuccess {
   data: authResponse
 }
 interface loginResponseValidate {
-  status: appStatus.validate | appStatus.authcode
+  status: appStatus.validate | appStatus.validatecode | appStatus.authcode
   data: authResponse
 }
 interface loginResponseError {
@@ -285,10 +286,11 @@ interface deviceInfo {
     utc: string
   }
   adid: string
+  deviceID: string
+  fts: string
   guestID: string
   guid: string
   uid: string
-  yyyyMMddHHmmss: string
 }
 /*******************
  ****** tools ******
