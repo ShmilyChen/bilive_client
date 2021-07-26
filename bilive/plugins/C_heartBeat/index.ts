@@ -9,7 +9,7 @@ class roomHeartBeat extends Plugin {
   public version = '0.0.2'
   public author = 'lzghzr'
   public async load({ defaultOptions, whiteList, version }: { defaultOptions: options, whiteList: Set<string>, version: version }) {
-    if (version === undefined || version.major !== 3) {
+    if (version === undefined || version.major < 3) {
       tools.Log('模拟心跳', '主程序版本不兼容', '需要3.0.0以上')
       this.loaded = false
     }
