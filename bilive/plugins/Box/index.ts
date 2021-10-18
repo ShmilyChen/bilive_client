@@ -4,10 +4,10 @@ class SignGroup extends Plugin {
   constructor() {
     super()
   }
-  public name = '应援团签到'
-  public description = '在已加入的应援团签到'
-  public version = '0.0.2'
-  public author = 'lzghzr'
+  public name = '宝箱抽奖'
+  public description = '自动参与宝箱抽奖'
+  public version = '0.0.1'
+  public author = 'ShmilyChen'
   /**
    * 任务表
    *
@@ -18,13 +18,13 @@ class SignGroup extends Plugin {
   private _signGroupList: Map<string, number> = new Map()
   public async load({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
     // 应援团签到
-    defaultOptions.newUserData['signGroup'] = false
-    defaultOptions.info['signGroup'] = {
-      description: '应援团签到',
-      tip: '在已加入的应援团签到',
+    defaultOptions.newUserData['autoBox'] = false
+    defaultOptions.info['autoBox'] = {
+      description: '宝箱抽奖',
+      tip: '自动参与宝箱抽奖',
       type: 'boolean'
     }
-    whiteList.add('signGroup')
+    whiteList.add('autoBox')
     this.loaded = true
   }
   public async start({ users }: { users: Map<string, User> }) {
@@ -69,8 +69,8 @@ ${AppClient.signQueryBase(`${user.tokenQuery}&group_id=${groupInfo.group_id}&own
             if (signGroup !== undefined && signGroup.response.statusCode === 200) {
               ok++
               if (signGroup.body.data.add_num > 0)
-                tools.Log(user.nickname, '应援团签到', `在 ${groupInfo.group_name} 签到获得 ${signGroup.body.data.add_num} 点亲密度`)
-              else tools.Log(user.nickname, '应援团签到', `已在 ${groupInfo.group_name} 签到过`)
+                tools.Log(user.nickname, '应援团签到', `在${groupInfo.group_name}签到获得${signGroup.body.data.add_num} 点亲密度 `)
+              else tools.Log(user.nickname, '应援团签到', `已在${groupInfo.group_name}签到过 `)
             }
             else tools.Log(user.nickname, '应援团签到', '网络错误')
             await tools.Sleep(3000)

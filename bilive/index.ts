@@ -23,7 +23,7 @@ class BiLive {
   public version: version = {
     major: 4,
     minor: 0,
-    version:400,
+    version: 400,
     patch: 1,
     semver: '4.0.0'
   }

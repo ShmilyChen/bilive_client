@@ -284,8 +284,11 @@ class Tools extends EventEmitter {
     return Math.floor(Date.now() / 1000)
   }
 
-  public isToday(date: string) {
-    return new Date(date).toString().slice(0, 10) === new Date().toString().slice(0, 10)
+  public isToday(date: string | number) {
+    if (typeof date === 'number' && date.toString().length === 10) {
+      date = date * 1000
+    }
+    return new Date(date).toString().slice(0, 15) === new Date().toString().slice(0, 15)
   }
 
   private getHost(domain: string) {
@@ -310,7 +313,7 @@ class Tools extends EventEmitter {
       jar.setCookieSync(`${iterator}; Domain=${domain}; Path=/`, `https://${domain}`)
     }
     // cookies.forEach(
-    //   cookie => jar.setCookieSync(`${cookie}; Domain=${domain}; Path=/`, `https://${domain}`)
+    //   cookie => jar.setCookieSync(`${cookie}; Domain=${domain}; Path=/`,`https://${domain}`)
     // )
     return jar
   }

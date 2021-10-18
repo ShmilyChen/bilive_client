@@ -4,8 +4,8 @@ class Bag extends Plugin {
   constructor() {
     super()
   }
-  public name = ' 包裹道具'
-  public description = ' 领取直播包裹道具'
+  public name = '包裹道具'
+  public description = '领取直播包裹道具'
   public version = '0.0.2'
   public author = 'lzghzr'
   /**
@@ -18,10 +18,10 @@ class Bag extends Plugin {
   private _getBagList: Map<string, boolean> = new Map()
   public async load({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
     // 包裹道具
-     defaultOptions.newUserData['getBag'] = false
+    defaultOptions.newUserData['getBag'] = false
     defaultOptions.info['getBag'] = {
-      description: ' 包裹道具',
-      tip: ' 领取直播包裹道具',
+      description: '包裹道具',
+      tip: '领取直播包裹道具',
       type: 'boolean'
     }
     whiteList.add('getBag')
@@ -32,9 +32,9 @@ class Bag extends Plugin {
   }
   public async loop({ cstMin, cstHour, cstString, users }: { cstMin: number, cstHour: number, cstString: string, users: Map<string, User> }) {
     // 每天 00:10 刷新任务
-     if (cstString === '00:10') this._getBagList.clear()
+    if (cstString === '00:10') this._getBagList.clear()
     // 每天 04:30, 12:30, 20:30 做任务
-     if (cstMin === 30 && cstHour % 8 === 4) this._getBag(users)
+    if (cstMin === 30 && cstHour % 8 === 4) this._getBag(users)
   }
   /**
    * 包裹道具
@@ -54,11 +54,11 @@ class Bag extends Plugin {
       if (getBagGift !== undefined && getBagGift.response.statusCode === 200) {
         if (getBagGift.body.code === 0) {
           this._getBagList.set(uid, true)
-          tools.Log(user.nickname, ' 包裹道具', ' 已获取每日包裹道具')
+          tools.Log(user.nickname, '包裹道具', '已获取每日包裹道具')
         }
-        else tools.Log(user.nickname, ' 包裹道具', getBagGift.body)
+        else tools.Log(user.nickname, '包裹道具', getBagGift.body)
       }
-      else tools.Log(user.nickname, ' 包裹道具', ' 网络错误')
+      else tools.Log(user.nickname, '包裹道具', '网络错误')
     })
   }
 }

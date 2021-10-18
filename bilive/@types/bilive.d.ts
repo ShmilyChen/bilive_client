@@ -616,6 +616,7 @@ interface bilibiliXHR<T> {
   message: string
   data: T
 }
+
 interface version {
   /** 主版本号 */
   major: number

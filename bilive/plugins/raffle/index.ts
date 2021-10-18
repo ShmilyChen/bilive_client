@@ -265,7 +265,7 @@ class Raffle extends Plugin {
   private async _doRaffle({ message, options, users }: { message: raffleMessage | lotteryMessage, options: options, users: Map<string, User> }) {
     const delay = 3000
     // if ((message.timeout - (Date.now() + delay)) <= 3000) {
-    //    tools.Log(message.title, message.id, '抽奖已结束取消抽奖')
+    //    tools.Log(message.title, message.id,'抽奖已结束取消抽奖')
     //    this._Lottery()
     //    return
     // }

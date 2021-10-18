@@ -4,8 +4,8 @@ class Sign extends Plugin {
   constructor() {
     super()
   }
-  public name = ' 自动签到'
-  public description = ' 每天自动签到'
+  public name = '自动签到'
+  public description = '每天自动签到'
   public version = '0.0.2'
   public author = 'lzghzr'
   /**
@@ -18,10 +18,10 @@ class Sign extends Plugin {
   private _signList: Map<string, boolean> = new Map()
   public async load({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
     // 自动签到
-     defaultOptions.newUserData['doSign'] = false
+    defaultOptions.newUserData['doSign'] = false
     defaultOptions.info['doSign'] = {
-      description: ' 自动签到',
-      tip: ' 每天自动签到',
+      description: '自动签到',
+      tip: '每天自动签到',
       type: 'boolean'
     }
     whiteList.add('doSign')
@@ -32,9 +32,9 @@ class Sign extends Plugin {
   }
   public async loop({ cstMin, cstHour, cstString, users }: { cstMin: number, cstHour: number, cstString: string, users: Map<string, User> }) {
     // 每天 00:10 刷新任务
-     if (cstString === '00:10') this._signList.clear()
+    if (cstString === '00:10') this._signList.clear()
     // 每天 04:30, 12:30, 20:30 做任务
-     if (cstMin === 30 && cstHour % 8 === 4) this._getSignInfo(users)
+    if (cstMin === 30 && cstHour % 8 === 4) this._getSignInfo(users)
   }
   /**
    * 获取签到信息
@@ -54,12 +54,12 @@ class Sign extends Plugin {
       const getSignInfo = await tools.XHR<getSignInfo>(sign, 'Android')
       if (getSignInfo !== undefined && getSignInfo.response.statusCode === 200) {
         if (getSignInfo.body.code === 0) {
-          if (getSignInfo.body.data.is_signed) tools.Log(user.nickname, ' 自动签到', ' 今日已签到过')
+          if (getSignInfo.body.data.is_signed) tools.Log(user.nickname, '签到', '今日已签到过')
           else await this._doSign(user, uid)
         }
-        else tools.Log(user.nickname, ' 自动签到', getSignInfo.body)
+        else tools.Log(user.nickname, '自动签到', getSignInfo.body)
       }
-      else tools.Log(user.nickname, ' 自动签到', ' 网络错误')
+      else tools.Log(user.nickname, '自动签到', '网络错误')
     })
   }
   /**
@@ -80,11 +80,11 @@ class Sign extends Plugin {
     if (doSign !== undefined && doSign.response.statusCode === 200) {
       if (doSign.body.code === 0) {
         this._signList.set(uid, true)
-        tools.Log(user.nickname, ' 自动签到', ' 已签到')
+        tools.Log(user.nickname, '自动签到', '已签到')
       }
-      else tools.Log(user.nickname, ' 自动签到', doSign.body)
+      else tools.Log(user.nickname, '自动签到', doSign.body)
     }
-    else tools.Log(user.nickname, ' 自动签到', ' 网络错误')
+    else tools.Log(user.nickname, '自动签到', '网络错误')
   }
 }
 /**

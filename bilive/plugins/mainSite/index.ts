@@ -172,9 +172,9 @@ class MainSite extends Plugin {
       }
     }
     const rankList = await tools.XHR<bilibiliXHR<rankDate>>(ranking)
-    if(rankList !== undefined && rankList.response.statusCode === 200 && rankList.body.code === 0){
+    if (rankList !== undefined && rankList.response.statusCode === 200 && rankList.body.code === 0) {
       return rankList.body.data.list
-    }else{
+    } else {
       return []
     }
   }

@@ -114,9 +114,9 @@ class FuckLight extends Plugin {
      */
     private async getFansMedalList(user: User): Promise<FansMedalList[]> {
         let fansMedalList = new Array<FansMedalList>()
-        for (let i = 1; i <= 1000 / 25; i++) {
+        for (let i = 1; i <= 1000 / 10; i++) {
             const medalList: XHRoptions = {
-                url: `https://api.live.bilibili.com/i/api/medal?page=${i}&pageSize=25`,
+                url: `https://api.live.bilibili.com/i/api/medal?page=${i}&pageSize=10`,
                 responseType: 'json',
                 cookieJar: user.jar,
                 headers: user.headers,

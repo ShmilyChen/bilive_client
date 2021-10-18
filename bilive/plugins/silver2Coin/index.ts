@@ -4,8 +4,8 @@ class Coin extends Plugin {
   constructor() {
     super()
   }
-  public name = ' 兑换硬币'
-  public description = ' 将银瓜子兑换成硬币'
+  public name = '兑换硬币'
+  public description = '将银瓜子兑换成硬币'
   public version = '0.0.2'
   public author = 'lzghzr'
   /**
@@ -18,10 +18,10 @@ class Coin extends Plugin {
   private _silver2coinList: Map<string, boolean> = new Map()
   public async load({ defaultOptions, whiteList }: { defaultOptions: options, whiteList: Set<string> }) {
     // 兑换硬币
-     defaultOptions.newUserData['silver2coin'] = false
+    defaultOptions.newUserData['silver2coin'] = false
     defaultOptions.info['silver2coin'] = {
-      description: ' 兑换硬币',
-      tip: ' 将银瓜子兑换成硬币',
+      description: '兑换硬币',
+      tip: '将银瓜子兑换成硬币',
       type: 'boolean'
     }
     whiteList.add('silver2coin')
@@ -32,9 +32,9 @@ class Coin extends Plugin {
   }
   public async loop({ cstMin, cstHour, cstString, users }: { cstMin: number, cstHour: number, cstString: string, users: Map<string, User> }) {
     // 每天 00:10 刷新任务
-     if (cstString === '00:10') this._silver2coinList.clear()
+    if (cstString === '00:10') this._silver2coinList.clear()
     // 每天 04:30, 12:30, 20:30 做任务
-     if (cstMin === 30 && cstHour % 8 === 4) this._silver2coin(users)
+    if (cstMin === 30 && cstHour % 8 === 4) this._silver2coin(users)
   }
   /**
    * 兑换硬币
@@ -48,18 +48,18 @@ class Coin extends Plugin {
       const exchange: XHRoptions = {
         method: 'POST',
         url: `https://api.live.bilibili.com/AppExchange/silver2coin?${AppClient.signQueryBase(user.tokenQuery)}`,
-        responseType:'json',
+        responseType: 'json',
         headers: user.headers
       }
       const silver2coin = await tools.XHR<silver2coin>(exchange, 'Android')
       if (silver2coin !== undefined && silver2coin.response.statusCode === 200) {
         if (silver2coin.body.code === 0 || silver2coin.body.code === 403) {
           this._silver2coinList.set(uid, true)
-          tools.Log(user.nickname, ' 兑换硬币', ' 已成功兑换硬币')
+          tools.Log(user.nickname, '兑换硬币', '已成功兑换硬币')
         }
-        else tools.Log(user.nickname, ' 兑换硬币', silver2coin.body)
+        else tools.Log(user.nickname, '兑换硬币', silver2coin.body)
       }
-      else tools.Log(user.nickname, ' 兑换硬币', ' 网络错误')
+      else tools.Log(user.nickname, '兑换硬币', '网络错误')
     })
   }
 }

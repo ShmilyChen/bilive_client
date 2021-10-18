@@ -54,6 +54,8 @@ docs/view/
 
 test/*
 
+**/judGement/*
+
 CookieSet.json
 
 bilive/plugins/judGement
